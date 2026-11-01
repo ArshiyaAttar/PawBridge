@@ -8,6 +8,8 @@ import {
   ArrowRight,
   MapPin,
   CheckCircle2,
+  ClipboardList,
+  FileText,
 } from "lucide-react";
 import API from "../services/api";
 
@@ -196,20 +198,53 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="container paw-section text-center">
-        <span className="eyebrow">WHAT WE DO</span>
-        <h2 className="section-title">Small actions. <span>Big differences.</span></h2>
-        <p className="paw-muted mx-auto section-description">One platform bringing adopters, shelters and rescuers together.</p>
+      <section className="container paw-section">
+        <div className="text-center">
+          <span className="eyebrow">SUPPORT AT EVERY STEP</span>
+          <h2 className="section-title">
+            From first hello to <span>forever home.</span>
+          </h2>
+          <p className="paw-muted mx-auto section-description">
+            Find a companion, follow your application, or help an animal in
+            need. PawBridge keeps each step connected.
+          </p>
+        </div>
         <div className="row g-4 mt-3">
           {[
-            {icon:<Search/>,title:"Find a Friend",text:"Browse pets and discover your perfect companion.",link:"/pets"},
-            {icon:<Heart/>,title:"Adopt with Love",text:"Apply to adopt and give an animal a forever home.",link:"/pets"},
-            {icon:<ShieldCheck/>,title:"Support Rescue",text:"Report animals in need and help coordinate rescue.",link:"/rescue"}
-          ].map((item)=><div className="col-md-4" key={item.title}>
+            {
+              icon: <Search />,
+              title: "Find a companion",
+              text: "Explore available pets and open a profile to learn more.",
+              action: "Browse pets",
+              link: "/pets",
+            },
+            {
+              icon: <ClipboardList />,
+              title: "Follow your application",
+              text: "Check application status, shelter feedback, and full details.",
+              action: "View applications",
+              link: "/my-applications",
+            },
+            {
+              icon: <ShieldCheck />,
+              title: "Report an animal in need",
+              text: "Share the animal's condition and location with the rescue team.",
+              action: "Make a report",
+              link: "/rescue",
+            },
+            {
+              icon: <FileText />,
+              title: "Track rescue reports",
+              text: "Return to your submitted reports and follow their progress.",
+              action: "View reports",
+              link: "/my-rescues",
+            },
+          ].map((item)=><div className="col-sm-6 col-xl-3" key={item.title}>
             <Link to={item.link} className="feature-card">
               <div className="feature-icon">{item.icon}</div>
-              <h5>{item.title}</h5><p>{item.text}</p>
-              <span>Explore <ArrowRight size={15}/></span>
+              <h3 className="h5">{item.title}</h3>
+              <p>{item.text}</p>
+              <span>{item.action} <ArrowRight size={15}/></span>
             </Link>
           </div>)}
         </div>
