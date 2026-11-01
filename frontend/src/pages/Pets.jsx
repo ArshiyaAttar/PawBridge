@@ -13,6 +13,12 @@ import API from "../services/api";
 const fallbackImage =
   "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=700";
 
+const fallbackImages = {
+  Dog: fallbackImage,
+  Cat: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=700",
+  Bird: "https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=700",
+};
+
 const getAgeLabel = (age) => {
   if (age === 0) return "Under 1 year";
   return `${age} ${age === 1 ? "year" : "years"} old`;
@@ -24,6 +30,7 @@ export default function Pets() {
   const [species, setSpecies] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -58,7 +65,7 @@ export default function Pets() {
       active = false;
       clearTimeout(timer);
     };
-  }, [search, species]);
+  }, [search, species, retryKey]);
 
   const clearFilters = () => {
     setSearch("");
@@ -79,7 +86,7 @@ export default function Pets() {
         </div>
         <div className="pet-count-note">
           <PawPrint size={18} />
-          <span>{loading ? "…" : pets.length} available today</span>
+          <span>{loading ? "…" : pets.length} pets found</span>
         </div>
       </div>
 
@@ -131,11 +138,27 @@ export default function Pets() {
       )}
 
       {!loading && error && (
-        <div className="alert alert-danger d-flex justify-content-between align-items-center gap-3">
+        <div
+          className="alert alert-danger d-flex justify-content-between align-items-center gap-3"
+          role="alert"
+        >
           <span>{error}</span>
-          <button className="btn btn-outline-danger btn-sm" onClick={clearFilters}>
-            Reset search
-          </button>
+          <div className="d-flex gap-2 flex-shrink-0">
+            <button
+              className="btn btn-outline-danger btn-sm"
+              onClick={() => setRetryKey((current) => current + 1)}
+            >
+              Try again
+            </button>
+            {(search || species) && (
+              <button
+                className="btn btn-outline-danger btn-sm"
+                onClick={clearFilters}
+              >
+                Clear filters
+              </button>
+            )}
+          </div>
         </div>
       )}
 
@@ -158,11 +181,12 @@ export default function Pets() {
               <article className="pet-card h-100">
                 <div className="pet-card-image-wrap">
                   <img
-                    src={pet.image || fallbackImage}
+                    src={pet.image || fallbackImages[pet.species] || fallbackImage}
                     alt={`${pet.name}, ${pet.species}`}
                     onError={(e) => {
                       e.currentTarget.onerror = null;
-                      e.currentTarget.src = fallbackImage;
+                      e.currentTarget.src =
+                        fallbackImages[pet.species] || fallbackImage;
                     }}
                     className="pet-card-image"
                   />

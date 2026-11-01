@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [form,setForm] = useState({email:"",password:""});
   const [error,setError] = useState("");
   const [loading,setLoading] = useState(false);
@@ -15,7 +16,7 @@ export default function Login() {
     setLoading(true);
     try {
       await login(form);
-      navigate("/dashboard");
+      navigate(location.state?.from || "/dashboard", { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || "Unable to log in. Please try again.");
     } finally {
