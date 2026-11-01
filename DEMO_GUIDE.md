@@ -90,9 +90,9 @@ The script creates these role accounts if they do not already exist:
 
 Do not publish the password value in a public repository or production frontend.
 
-## 5. Demo pets and applications
+## 5. Sample pets and applications
 
-The seed script creates six realistic sample pets:
+The seed script creates ten fictional sample pet profiles for local development: eight marked Available, one Pending, and one Adopted.
 
 | Pet | Species | Status | Demo purpose |
 |---|---|---|---|
@@ -100,10 +100,14 @@ The seed script creates six realistic sample pets:
 | Milo | Cat | Available | Search and species filter |
 | Coco | Dog | Available | Health and vaccination details |
 | Rio | Bird | Available | Other species listing |
+| Moti | Dog | Available | Solapur-area listing |
+| Gauri | Cat | Available | Akkalkot-area listing |
+| Bittu | Dog | Available | Barshi-area listing |
+| Chiku | Cat | Available | Pandharpur-area listing |
 | Bruno | Dog | Pending | Pending adoption workflow |
 | Pepper | Cat | Adopted | Adopted status and history |
 
-The homepage also includes three clearly labeled sample adoption listings (Luna, Milo, and Coco). These are illustrative previews; live availability and adoption applications are shown in the pet listings after demo data is seeded.
+The homepage reads available pets from the API; it does not contain hard-coded pet cards. Seeded profiles are fictional local-development data, not verified or live adoption offers. The seed command is blocked in production mode and should only be used with a development database.
 
 It also creates three application records:
 

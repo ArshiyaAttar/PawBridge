@@ -162,7 +162,7 @@ cd backend
 npm run seed:demo
 ```
 
-The seed creates four demo roles, six realistic pets, and pending, approved, and rejected applications. It is repeat-safe and preserves existing records. See [DEMO_GUIDE.md](./DEMO_GUIDE.md) for the complete procedure.
+The seed creates four demo roles, ten fictional sample pets (eight available), and pending, approved, and rejected applications. It is repeat-safe, preserves existing records, and is intended for development databases only. See [DEMO_GUIDE.md](./DEMO_GUIDE.md) for the complete procedure.
 
 ## Testing and quality checks
 
