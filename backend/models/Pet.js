@@ -13,7 +13,8 @@ const petSchema = new mongoose.Schema({
   vaccinated: { type: Boolean, default: false },
   status: { type: String, enum: ["Available", "Pending", "Adopted"], default: "Available" },
   shelter: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  isActive: { type: Boolean, default: true }
+  isActive: { type: Boolean, default: true },
+  demoKey: { type: String, unique: true, sparse: true, index: true }
 }, { timestamps: true });
 
 export default mongoose.model("Pet", petSchema);

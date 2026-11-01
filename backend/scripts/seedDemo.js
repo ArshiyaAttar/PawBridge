@@ -1,0 +1,125 @@
+import dotenv from "dotenv";
+import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
+import User from "../models/User.js";
+import Pet from "../models/Pet.js";
+import AdoptionApplication from "../models/AdoptionApplication.js";
+
+dotenv.config();
+
+const demoUsers = [
+  { key: "admin", name: "PawBridge Admin", email: "admin@pawbridge.demo", role: "admin" },
+  { key: "adopter", name: "Demo Adopter", email: "adopter@pawbridge.demo", role: "adopter" },
+  { key: "shelter", name: "Hope Paws Shelter", email: "shelter@pawbridge.demo", role: "shelter" },
+  { key: "rescuer", name: "Demo Rescuer", email: "rescuer@pawbridge.demo", role: "rescuer" },
+];
+
+const demoPets = [
+  { key: "luna", name: "Luna", species: "Dog", breed: "Indie mix", age: 2, gender: "Female", location: "Pune", healthStatus: "Healthy and playful", vaccinated: true, status: "Available", description: "Luna is a gentle, people-loving dog who enjoys walks and cuddles." },
+  { key: "milo", name: "Milo", species: "Cat", breed: "Domestic shorthair", age: 1, gender: "Male", location: "Mumbai", healthStatus: "Healthy; neutered", vaccinated: true, status: "Available", description: "Milo is curious, affectionate, and happiest near a sunny window." },
+  { key: "coco", name: "Coco", species: "Dog", breed: "Beagle", age: 4, gender: "Female", location: "Bengaluru", healthStatus: "Healthy; regular checkups", vaccinated: true, status: "Available", description: "Coco is an energetic companion who loves gentle games and patient families." },
+  { key: "rio", name: "Rio", species: "Bird", breed: "Indian ringneck", age: 3, gender: "Male", location: "Hyderabad", healthStatus: "Healthy", vaccinated: false, status: "Available", description: "Rio is bright and social, with a cheerful personality and a love for attention." },
+  { key: "bruno", name: "Bruno", species: "Dog", breed: "Labrador mix", age: 5, gender: "Male", location: "Nashik", healthStatus: "Healthy; calm temperament", vaccinated: true, status: "Pending", description: "Bruno is a loyal, easygoing dog currently meeting a prospective family." },
+  { key: "pepper", name: "Pepper", species: "Cat", breed: "Tuxedo mix", age: 2, gender: "Female", location: "Pune", healthStatus: "Healthy; indoor-ready", vaccinated: true, status: "Adopted", description: "Pepper is a quiet, affectionate cat who has found her forever home." },
+];
+
+const requireDemoConfig = () => {
+  if (!process.env.MONGODB_URI || !process.env.DEMO_PASSWORD) {
+    throw new Error("MONGODB_URI and DEMO_PASSWORD are required.");
+  }
+  if (process.env.DEMO_PASSWORD.length < 12) {
+    throw new Error("DEMO_PASSWORD must contain at least 12 characters.");
+  }
+  if (process.env.NODE_ENV === "production" || process.env.ALLOW_DEMO_SEED !== "true") {
+    throw new Error("Demo seeding is blocked unless ALLOW_DEMO_SEED=true and NODE_ENV is not production.");
+  }
+};
+
+const getOrCreateUser = async ({ name, email, role }) => {
+  const normalizedEmail = email.toLowerCase();
+  const existing = await User.findOne({ email: normalizedEmail });
+  if (existing) return existing;
+
+  const password = await bcrypt.hash(process.env.DEMO_PASSWORD, 12);
+  return User.create({ name, email: normalizedEmail, password, role, isActive: true });
+};
+
+const getOrCreatePet = async (pet, shelterId) => {
+  const existing = await Pet.findOne({ demoKey: `demo-${pet.key}` });
+  if (existing) return existing;
+
+  return Pet.create({
+    ...pet,
+    demoKey: `demo-${pet.key}`,
+    shelter: shelterId,
+    isActive: true,
+  });
+};
+
+const createApplicationIfMissing = async ({ pet, applicant, reviewer, status, reason, shelterNotes }) => {
+  const existing = await AdoptionApplication.findOne({ pet: pet._id, applicant: applicant._id });
+  if (existing) return existing;
+
+  return AdoptionApplication.create({
+    pet: pet._id,
+    applicant: applicant._id,
+    status,
+    reason,
+    experience: "I have cared for companion animals and can provide daily exercise and veterinary care.",
+    livingSituation: "A safe home with time, space, and a plan for responsible long-term care.",
+    shelterNotes,
+    reviewedBy: status === "Pending" ? null : reviewer._id,
+    reviewedAt: status === "Pending" ? null : new Date(),
+  });
+};
+
+const seedDemo = async () => {
+  try {
+    requireDemoConfig();
+    await mongoose.connect(process.env.MONGODB_URI);
+
+    const users = {};
+    for (const user of demoUsers) {
+      users[user.key] = await getOrCreateUser(user);
+    }
+
+    const pets = {};
+    for (const pet of demoPets) {
+      pets[pet.key] = await getOrCreatePet(pet, users.shelter._id);
+    }
+
+    await createApplicationIfMissing({
+      pet: pets.bruno,
+      applicant: users.adopter,
+      reviewer: users.shelter,
+      status: "Pending",
+      reason: "Bruno looks like a wonderful match for my active household.",
+      shelterNotes: "Awaiting initial review.",
+    });
+    await createApplicationIfMissing({
+      pet: pets.pepper,
+      applicant: users.adopter,
+      reviewer: users.shelter,
+      status: "Approved",
+      reason: "I can provide Pepper with a calm indoor home and consistent care.",
+      shelterNotes: "Approved for demonstration history.",
+    });
+    await createApplicationIfMissing({
+      pet: pets.luna,
+      applicant: users.adopter,
+      reviewer: users.shelter,
+      status: "Rejected",
+      reason: "I would love to learn more about Luna and her daily routine.",
+      shelterNotes: "Another applicant was a closer fit for this pet.",
+    });
+
+    console.log(`Demo seed complete: ${demoUsers.length} users, ${demoPets.length} pets, and 3 applications are available.`);
+  } catch (error) {
+    console.error("Demo seed failed:", error.message);
+    process.exitCode = 1;
+  } finally {
+    await mongoose.disconnect();
+  }
+};
+
+seedDemo();

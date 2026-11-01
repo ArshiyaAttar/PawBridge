@@ -7,6 +7,7 @@ import {
   Heart,
   Home,
   MapPin,
+  MessageCircle,
   ShieldCheck,
   VenusAndMars,
 } from "lucide-react";
@@ -34,6 +35,10 @@ export default function PetDetails() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [conversation, setConversation] = useState([]);
+  const [messageText, setMessageText] = useState("");
+  const [messageLoading, setMessageLoading] = useState(false);
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -61,6 +66,31 @@ export default function PetDetails() {
     };
   }, [id]);
 
+  useEffect(() => {
+    if (!user || !["adopter", "shelter", "admin"].includes(user.role)) {
+      setConversation([]);
+      return undefined;
+    }
+
+    let active = true;
+    const loadConversation = async () => {
+      try {
+        setMessageLoading(true);
+        const { data } = await API.get(`/messages/pet/${id}`);
+        if (active) setConversation(data.messages || []);
+      } catch {
+        if (active) setConversation([]);
+      } finally {
+        if (active) setMessageLoading(false);
+      }
+    };
+
+    loadConversation();
+    return () => {
+      active = false;
+    };
+  }, [id, user]);
+
   const apply = async (e) => {
     e.preventDefault();
 
@@ -83,6 +113,24 @@ export default function PetDetails() {
       setMessage(err.response?.data?.message || "Application failed.");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const sendMessage = async (e) => {
+    e.preventDefault();
+    if (messageText.trim().length < 2) return;
+
+    try {
+      setSendingMessage(true);
+      const { data } = await API.post(`/messages/pet/${id}`, {
+        body: messageText.trim(),
+      });
+      setConversation((current) => [...current, data.conversationMessage]);
+      setMessageText("");
+    } catch (err) {
+      setMessage(err.response?.data?.message || "Unable to send your message.");
+    } finally {
+      setSendingMessage(false);
     }
   };
 
@@ -158,6 +206,44 @@ export default function PetDetails() {
               <p className="mb-0">Tell the shelter about your home, experience, and the kind of care you can provide.</p>
             </div>
           </section>
+
+          {user && pet.shelter && (user.role === "adopter" || user.role === "shelter" || user.role === "admin") && (
+            <section className="chat-panel mb-4" aria-labelledby="shelter-chat-title">
+              <div className="d-flex align-items-center gap-2 mb-2">
+                <MessageCircle className="text-success" size={21} />
+                <h2 id="shelter-chat-title" className="h5 mb-0">Chat with the shelter</h2>
+              </div>
+              <p className="paw-muted small">Ask a question about {pet.name}&apos;s care, personality, or adoption process.</p>
+              <div className="chat-thread" aria-live="polite">
+                {messageLoading ? (
+                  <p className="paw-muted small mb-0">Loading conversation...</p>
+                ) : conversation.length ? (
+                  conversation.map((item) => {
+                    const fromCurrentUser = item.sender?._id === user.id;
+                    return (
+                      <div className={`chat-bubble ${fromCurrentUser ? "chat-bubble-own" : ""}`} key={item._id}>
+                        <strong>{fromCurrentUser ? "You" : item.sender?.name || "Shelter"}</strong>
+                        <p className="mb-0">{item.body}</p>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="paw-muted small mb-0">No messages yet. Start the conversation.</p>
+                )}
+              </div>
+              {user.role === "adopter" && (
+                <form className="mt-3" onSubmit={sendMessage}>
+                  <label className="visually-hidden" htmlFor="shelter-message">Message the shelter</label>
+                  <div className="input-group">
+                    <input id="shelter-message" className="form-control" value={messageText} maxLength={2000} onChange={(e) => setMessageText(e.target.value)} placeholder="Ask the shelter a question..." />
+                    <button className="btn paw-primary" type="submit" disabled={sendingMessage || messageText.trim().length < 2}>
+                      {sendingMessage ? "Sending..." : "Send"}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </section>
+          )}
 
           {pet.shelter && (
             <div className="feature-card mb-4">

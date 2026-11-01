@@ -11,6 +11,7 @@ import rescueRoutes from "./routes/rescueRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
+import messageRoutes from "./routes/messageRoutes.js";
 
 dotenv.config();
 
@@ -46,6 +47,7 @@ app.use("/api/adoptions", adoptionRoutes);
 app.use("/api/rescues", rescueRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/messages", messageRoutes);
 
 app.get("/", (req, res) => {
   res.json({
@@ -79,5 +81,4 @@ const startServer = async () => {
 };
 
 startServer();
-
 

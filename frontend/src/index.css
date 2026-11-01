@@ -188,3 +188,43 @@
   .pet-detail-image-wrap { min-height: 300px; }
   .pets-heading .section-title { font-size: 2.2rem; }
 }
+
+.chat-panel {
+  padding: 1.15rem 1.25rem;
+  border: 1px solid #dcebdd;
+  border-radius: 16px;
+  background: #fbfdf9;
+}
+.chat-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 0.85rem;
+  border: 1px solid #e7eee8;
+  border-radius: 12px;
+  background: #fff;
+}
+.chat-bubble {
+  align-self: flex-start;
+  max-width: 85%;
+  padding: 0.65rem 0.8rem;
+  border-radius: 12px 12px 12px 3px;
+  color: #26332d;
+  background: #eef5ef;
+  font-size: 0.88rem;
+}
+.chat-bubble strong {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: #287a55;
+  font-size: 0.74rem;
+}
+.chat-bubble-own {
+  align-self: flex-end;
+  border-radius: 12px 12px 3px 12px;
+  color: #fff;
+  background: #287a55;
+}
+.chat-bubble-own strong { color: #dff1e2; }
