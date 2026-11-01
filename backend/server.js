@@ -16,12 +16,13 @@ import messageRoutes from "./routes/messageRoutes.js";
 dotenv.config();
 
 const app = express();
+const clientUrl = (process.env.CLIENT_URL || "http://localhost:5173").replace(/\/$/, "");
 
 app.use(helmet());
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: clientUrl,
     credentials: true,
   })
 );
@@ -81,4 +82,3 @@ const startServer = async () => {
 };
 
 startServer();
-
