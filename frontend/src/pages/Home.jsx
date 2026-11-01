@@ -108,46 +108,46 @@ export default function Home() {
 
           {loadingPets && (
             <div className="pet-state text-center py-5" role="status">
-            <div className="spinner-border text-success" />
-            <p className="mt-3 mb-0">Finding pets looking for a home...</p>
+              <div className="spinner-border text-success" />
+              <p className="mt-3 mb-0">Finding pets looking for a home...</p>
             </div>
           )}
 
           {!loadingPets && petsError && (
             <div
-            className="alert alert-danger d-flex justify-content-between align-items-center gap-3"
-            role="alert"
+              className="alert alert-danger d-flex justify-content-between align-items-center gap-3"
+              role="alert"
             >
-            <span>{petsError}</span>
-            <button
-              className="btn paw-primary flex-shrink-0"
-              onClick={() => setRetryKey((current) => current + 1)}
-            >
-              Try again
-            </button>
+              <span>{petsError}</span>
+              <button
+                className="btn paw-primary flex-shrink-0"
+                onClick={() => setRetryKey((current) => current + 1)}
+              >
+                Try again
+              </button>
             </div>
           )}
 
           {!loadingPets && !petsError && pets.length === 0 && (
             <div className="pet-state text-center py-5">
-            <PawPrint size={42} className="mb-3 text-success" aria-hidden="true" />
-            <h3 className="h5">No pets are listed just yet</h3>
-            <p className="paw-muted mb-3">
-              Check all available pets or visit again soon.
-            </p>
-            <Link to="/pets" className="btn paw-primary">
-              Browse pets <ArrowRight size={16} />
-            </Link>
+              <PawPrint size={42} className="mb-3 text-success" aria-hidden="true" />
+              <h3 className="h5">No pets are listed just yet</h3>
+              <p className="paw-muted mb-3">
+                Check all available pets or visit again soon.
+              </p>
+              <Link to="/pets" className="btn paw-primary">
+                Browse pets <ArrowRight size={16} />
+              </Link>
             </div>
           )}
 
           {!loadingPets && !petsError && pets.length > 0 && (
             <div className="row g-4">
-            {pets.map((pet) => (
-              <div className="col-sm-6 col-lg-4" key={pet._id}>
-                <Link
-                  to={`/pets/${pet._id}`}
-                  className="home-pet-link"
+              {pets.map((pet) => (
+                <div className="col-sm-6 col-lg-4" key={pet._id}>
+                  <Link
+                    to={`/pets/${pet._id}`}
+                    className="home-pet-link"
                     aria-label={`Meet ${pet.name}, ${pet.species}, ${pet.breed || "mixed breed"}, in ${pet.location}`}
                   >
                     <article className="pet-card h-100">
@@ -193,7 +193,7 @@ export default function Home() {
                   </Link>
                 </div>
               ))}
-          </div>
+            </div>
           )}
         </div>
       </section>
@@ -239,14 +239,18 @@ export default function Home() {
               action: "View reports",
               link: "/my-rescues",
             },
-          ].map((item)=><div className="col-sm-6 col-xl-3" key={item.title}>
-            <Link to={item.link} className="feature-card">
-              <div className="feature-icon">{item.icon}</div>
-              <h3 className="h5">{item.title}</h3>
-              <p>{item.text}</p>
-              <span>{item.action} <ArrowRight size={15}/></span>
-            </Link>
-          </div>)}
+          ].map((item) => (
+            <div className="col-sm-6 col-xl-3" key={item.title}>
+              <Link to={item.link} className="feature-card">
+                <div className="feature-icon">{item.icon}</div>
+                <h3 className="h5">{item.title}</h3>
+                <p>{item.text}</p>
+                <span>
+                  {item.action} <ArrowRight size={15} />
+                </span>
+              </Link>
+            </div>
+          ))}
         </div>
       </section>
 
