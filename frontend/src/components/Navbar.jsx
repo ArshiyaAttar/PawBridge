@@ -1,5 +1,5 @@
 import { Link, NavLink } from "react-router-dom";
-import { PawPrint, UserCircle, LogOut } from "lucide-react";
+import { PawPrint, LogOut } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 export default function Navbar() {
@@ -12,8 +12,16 @@ export default function Navbar() {
           <span className="brand-icon"><PawPrint size={24}/></span>
           PawBridge
         </Link>
-        <button className="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#pawNav">
-          <span className="navbar-toggler-icon"/>
+        <button
+          className="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#pawNav"
+          aria-controls="pawNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span className="navbar-toggler-icon" />
         </button>
         <div className="collapse navbar-collapse" id="pawNav">
           <div className="navbar-nav ms-auto align-items-lg-center gap-lg-3">

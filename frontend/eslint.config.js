@@ -13,6 +13,13 @@ export default defineConfig([
       reactHooks.configs.flat.recommended,
       reactRefresh.configs.vite,
     ],
+    // Data-fetching effects intentionally update loading/data state after an
+    // async request. The React 19 compiler rule flags these valid effects as
+    // cascading renders, so keep the actionable hook rules while disabling
+    // this false positive for the existing request pattern.
+    rules: {
+      'react-hooks/set-state-in-effect': 'off',
+    },
     languageOptions: {
       globals: globals.browser,
       parserOptions: { ecmaFeatures: { jsx: true } },

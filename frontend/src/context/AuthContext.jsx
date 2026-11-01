@@ -1,5 +1,6 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useState,
@@ -13,13 +14,13 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const updateUser = (updatedUser) => {
+  const updateUser = useCallback((updatedUser) => {
     localStorage.setItem(
       "pawbridge_user",
       JSON.stringify(updatedUser)
     );
     setUser(updatedUser);
-  };
+  }, []);
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -43,7 +44,7 @@ export function AuthProvider({ children }) {
     };
 
     initializeAuth();
-  }, []);
+  }, [updateUser]);
 
   const login = async (credentials) => {
     const { data } = await API.post("/auth/login", credentials);
@@ -85,4 +86,7 @@ export function AuthProvider({ children }) {
   );
 }
 
+// The hook is intentionally exported beside the provider for the app's
+// existing import surface; it has no component state of its own.
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(AuthContext);

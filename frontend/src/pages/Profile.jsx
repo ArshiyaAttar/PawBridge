@@ -30,7 +30,7 @@ export default function Profile() {
     };
 
     loadProfile();
-  }, []);
+  }, [updateUser]);
 
   const submit = async (e) => {
     e.preventDefault();

@@ -1,11 +1,22 @@
-
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, MapPin, PawPrint } from "lucide-react";
+import {
+  Activity,
+  CheckCircle2,
+  MapPin,
+  PawPrint,
+  Search,
+  VenusAndMars,
+} from "lucide-react";
 import API from "../services/api";
 
 const fallbackImage =
   "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=700";
+
+const getAgeLabel = (age) => {
+  if (age === 0) return "Under 1 year";
+  return `${age} ${age === 1 ? "year" : "years"} old`;
+};
 
 export default function Pets() {
   const [pets, setPets] = useState([]);
@@ -20,6 +31,7 @@ export default function Pets() {
     const timer = setTimeout(async () => {
       try {
         setLoading(true);
+        setError("");
 
         const { data } = await API.get("/pets", {
           params: {
@@ -29,10 +41,7 @@ export default function Pets() {
           },
         });
 
-        if (active) {
-          setPets(data.pets || []);
-          setError("");
-        }
+        if (active) setPets(data.pets || []);
       } catch (err) {
         if (active) {
           setError(
@@ -51,75 +60,91 @@ export default function Pets() {
     };
   }, [search, species]);
 
+  const clearFilters = () => {
+    setSearch("");
+    setSpecies("");
+  };
+
   return (
     <main className="container paw-section">
-      <span className="eyebrow">FIND YOUR COMPANION</span>
-
-      <h1 className="section-title">
-        Meet your new <span>best friend.</span>
-      </h1>
-
-      <p className="paw-muted">
-        Every animal deserves a loving home. Find your perfect companion.
-      </p>
-
-      <div className="row g-3 my-4">
-        <div className="col-md-8">
-          <div className="input-group">
-            <span className="input-group-text bg-white">
-              <Search size={20} />
-            </span>
-
-            <input
-              type="search"
-              className="form-control"
-              placeholder="Search by name, breed or description..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
+      <div className="pets-heading d-flex justify-content-between align-items-end gap-3 flex-wrap">
+        <div>
+          <span className="eyebrow">FIND YOUR COMPANION</span>
+          <h1 className="section-title mb-2">
+            Meet your new <span>best friend.</span>
+          </h1>
+          <p className="paw-muted mb-0">
+            Explore available pets and learn what makes each one special.
+          </p>
         </div>
+        <div className="pet-count-note">
+          <PawPrint size={18} />
+          <span>{loading ? "…" : pets.length} available today</span>
+        </div>
+      </div>
 
-        <div className="col-md-4">
-          <select
-            className="form-select p-3"
-            value={species}
-            onChange={(e) => setSpecies(e.target.value)}
-          >
-            <option value="">All animals</option>
-            <option value="Dog">Dogs</option>
-            <option value="Cat">Cats</option>
-            <option value="Bird">Birds</option>
-            <option value="Other">Other</option>
-          </select>
+      <div className="pet-filter-panel my-4">
+        <div className="row g-3 align-items-end">
+          <div className="col-lg-8">
+            <label className="form-label" htmlFor="pet-search">
+              Search the adoption listings
+            </label>
+            <div className="input-group">
+              <span className="input-group-text bg-white">
+                <Search size={20} aria-hidden="true" />
+              </span>
+              <input
+                id="pet-search"
+                type="search"
+                className="form-control"
+                placeholder="Search by name, breed or description..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="col-lg-4">
+            <label className="form-label" htmlFor="species-filter">
+              Animal type
+            </label>
+            <select
+              id="species-filter"
+              className="form-select"
+              value={species}
+              onChange={(e) => setSpecies(e.target.value)}
+            >
+              <option value="">All animals</option>
+              <option value="Dog">Dogs</option>
+              <option value="Cat">Cats</option>
+              <option value="Bird">Birds</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
         </div>
       </div>
 
       {loading && (
-        <div className="text-center py-5">
+        <div className="pet-state text-center py-5" role="status">
           <div className="spinner-border text-success" />
-          <p className="mt-3">Finding your new companion...</p>
+          <p className="mt-3 mb-0">Finding your new companion...</p>
         </div>
       )}
 
       {!loading && error && (
-        <div className="alert alert-danger">{error}</div>
+        <div className="alert alert-danger d-flex justify-content-between align-items-center gap-3">
+          <span>{error}</span>
+          <button className="btn btn-outline-danger btn-sm" onClick={clearFilters}>
+            Reset search
+          </button>
+        </div>
       )}
 
       {!loading && !error && pets.length === 0 && (
-        <div className="text-center py-5">
-          <PawPrint size={48} className="mb-3 text-success" />
+        <div className="pet-state text-center py-5">
+          <PawPrint size={48} className="mb-3 text-success" aria-hidden="true" />
           <h4>No pets found</h4>
-          <p className="paw-muted">
-            Try another search or change your filters.
-          </p>
-          <button
-            className="btn btn-outline-success"
-            onClick={() => {
-              setSearch("");
-              setSpecies("");
-            }}
-          >
+          <p className="paw-muted">Try another search or change your filters.</p>
+          <button className="btn btn-outline-success" onClick={clearFilters}>
             Clear filters
           </button>
         </div>
@@ -130,46 +155,54 @@ export default function Pets() {
           !error &&
           pets.map((pet) => (
             <div className="col-sm-6 col-lg-4" key={pet._id}>
-              <div className="paw-card h-100">
-                <img
-                  src={pet.image || fallbackImage}
-                  alt={pet.name}
-                  onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src = fallbackImage;
-                  }}
-                  style={{
-                    width: "100%",
-                    height: 230,
-                    objectFit: "cover",
-                  }}
-                />
+              <article className="pet-card h-100">
+                <div className="pet-card-image-wrap">
+                  <img
+                    src={pet.image || fallbackImage}
+                    alt={`${pet.name}, ${pet.species}`}
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = fallbackImage;
+                    }}
+                    className="pet-card-image"
+                  />
+                  <span className="pet-status-badge">{pet.status}</span>
+                </div>
 
-                <div className="p-4">
-                  <div className="d-flex justify-content-between align-items-center">
-                    <h5 className="fw-bold mb-2">{pet.name}</h5>
-                    <span className="badge text-bg-success">
-                      {pet.status}
+                <div className="p-4 d-flex flex-column h-100">
+                  <div className="d-flex justify-content-between align-items-start gap-2">
+                    <div>
+                      <h2 className="h4 fw-bold mb-1">{pet.name}</h2>
+                      <p className="paw-muted mb-3">
+                        {pet.breed || "Mixed breed"} · {getAgeLabel(pet.age)}
+                      </p>
+                    </div>
+                    <span className="species-tag">{pet.species}</span>
+                  </div>
+
+                  <div className="pet-fact-list mb-3">
+                    <span><VenusAndMars size={15} /> {pet.gender || "Unknown"}</span>
+                    <span><MapPin size={15} /> {pet.location}</span>
+                    <span>
+                      <CheckCircle2 size={15} />
+                      {pet.vaccinated ? "Vaccinated" : "Vaccination unconfirmed"}
                     </span>
                   </div>
 
-                  <p className="paw-muted">
-                    {pet.species} · {pet.breed || "Mixed breed"} ·{" "}
-                    {pet.age} years
+                  <p className="pet-description mb-4">
+                    {pet.description || "This pet is waiting to meet a caring family."}
                   </p>
 
-                  <p>
-                    <MapPin size={15} /> {pet.location}
-                  </p>
-
-                  <Link
-                    to={`/pets/${pet._id}`}
-                    className="btn paw-primary w-100"
-                  >
-                    Meet {pet.name}
-                  </Link>
+                  <div className="mt-auto">
+                    <p className="pet-health-note mb-3">
+                      <Activity size={15} /> {pet.healthStatus || "Health details available on profile"}
+                    </p>
+                    <Link to={`/pets/${pet._id}`} className="btn paw-primary w-100">
+                      Meet {pet.name}
+                    </Link>
+                  </div>
                 </div>
-              </div>
+              </article>
             </div>
           ))}
       </div>
