@@ -1,5 +1,42 @@
 import { Link } from "react-router-dom";
-import { PawPrint, Heart, ShieldCheck, Search, ArrowRight } from "lucide-react";
+import {
+  PawPrint,
+  Heart,
+  ShieldCheck,
+  Search,
+  ArrowRight,
+  MapPin,
+} from "lucide-react";
+
+const demoPets = [
+  {
+    name: "Luna",
+    species: "Dog",
+    breed: "Indie mix · 2 years old",
+    location: "Pune",
+    description:
+      "A gentle, people-loving companion who enjoys walks and cuddles.",
+    image: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=700",
+  },
+  {
+    name: "Milo",
+    species: "Cat",
+    breed: "Domestic shorthair · 1 year old",
+    location: "Mumbai",
+    description:
+      "Curious and affectionate, Milo is happiest near a sunny window.",
+    image: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=700",
+  },
+  {
+    name: "Coco",
+    species: "Dog",
+    breed: "Beagle · 4 years old",
+    location: "Bengaluru",
+    description:
+      "An energetic friend who loves gentle games and patient families.",
+    image: "https://images.unsplash.com/photo-1552053831-71594a27632d?w=700",
+  },
+];
 
 export default function Home() {
   return (
@@ -24,6 +61,54 @@ export default function Home() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="container py-5">
+        <div className="d-flex justify-content-between align-items-end gap-3 flex-wrap mb-4">
+          <div>
+            <span className="eyebrow">SAMPLE ADOPTION LISTINGS</span>
+            <h2 className="section-title mb-2">
+              Meet a few <span>lovely pets.</span>
+            </h2>
+            <p className="paw-muted mb-0">
+              Demo examples to show how adoptable pets appear on PawBridge.
+            </p>
+          </div>
+          <Link to="/pets" className="btn btn-outline-success">
+            Browse all pets <ArrowRight size={16} />
+          </Link>
+        </div>
+
+        <div className="row g-4">
+          {demoPets.map((pet) => (
+            <div className="col-sm-6 col-lg-4" key={pet.name}>
+              <article className="pet-card h-100">
+                <div className="pet-card-image-wrap">
+                  <img
+                    src={pet.image}
+                    alt={`${pet.name}, a demo ${pet.species.toLowerCase()} adoption listing`}
+                    className="pet-card-image"
+                    loading="lazy"
+                  />
+                  <span className="pet-status-badge">Demo example</span>
+                </div>
+                <div className="p-4">
+                  <div className="d-flex justify-content-between align-items-start gap-2">
+                    <div>
+                      <h3 className="h4 fw-bold mb-1">{pet.name}</h3>
+                      <p className="paw-muted mb-3">{pet.breed}</p>
+                    </div>
+                    <span className="species-tag">{pet.species}</span>
+                  </div>
+                  <p className="pet-fact-list mb-3">
+                    <MapPin size={15} /> {pet.location}
+                  </p>
+                  <p className="pet-description mb-0">{pet.description}</p>
+                </div>
+              </article>
+            </div>
+          ))}
         </div>
       </section>
 

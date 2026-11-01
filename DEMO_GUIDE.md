@@ -103,6 +103,8 @@ The seed script creates six realistic sample pets:
 | Bruno | Dog | Pending | Pending adoption workflow |
 | Pepper | Cat | Adopted | Adopted status and history |
 
+The homepage also includes three clearly labeled sample adoption listings (Luna, Milo, and Coco). These are illustrative previews; live availability and adoption applications are shown in the pet listings after demo data is seeded.
+
 It also creates three application records:
 
 - Bruno: Pending

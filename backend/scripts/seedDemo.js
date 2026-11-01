@@ -15,12 +15,12 @@ const demoUsers = [
 ];
 
 const demoPets = [
-  { key: "luna", name: "Luna", species: "Dog", breed: "Indie mix", age: 2, gender: "Female", location: "Pune", healthStatus: "Healthy and playful", vaccinated: true, status: "Available", description: "Luna is a gentle, people-loving dog who enjoys walks and cuddles." },
-  { key: "milo", name: "Milo", species: "Cat", breed: "Domestic shorthair", age: 1, gender: "Male", location: "Mumbai", healthStatus: "Healthy; neutered", vaccinated: true, status: "Available", description: "Milo is curious, affectionate, and happiest near a sunny window." },
-  { key: "coco", name: "Coco", species: "Dog", breed: "Beagle", age: 4, gender: "Female", location: "Bengaluru", healthStatus: "Healthy; regular checkups", vaccinated: true, status: "Available", description: "Coco is an energetic companion who loves gentle games and patient families." },
-  { key: "rio", name: "Rio", species: "Bird", breed: "Indian ringneck", age: 3, gender: "Male", location: "Hyderabad", healthStatus: "Healthy", vaccinated: false, status: "Available", description: "Rio is bright and social, with a cheerful personality and a love for attention." },
-  { key: "bruno", name: "Bruno", species: "Dog", breed: "Labrador mix", age: 5, gender: "Male", location: "Nashik", healthStatus: "Healthy; calm temperament", vaccinated: true, status: "Pending", description: "Bruno is a loyal, easygoing dog currently meeting a prospective family." },
-  { key: "pepper", name: "Pepper", species: "Cat", breed: "Tuxedo mix", age: 2, gender: "Female", location: "Pune", healthStatus: "Healthy; indoor-ready", vaccinated: true, status: "Adopted", description: "Pepper is a quiet, affectionate cat who has found her forever home." },
+  { key: "luna", name: "Luna", species: "Dog", breed: "Indie mix", age: 2, gender: "Female", location: "Pune", healthStatus: "Healthy and playful", vaccinated: true, status: "Available", description: "Luna is a gentle, people-loving dog who enjoys walks and cuddles.", image: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=700" },
+  { key: "milo", name: "Milo", species: "Cat", breed: "Domestic shorthair", age: 1, gender: "Male", location: "Mumbai", healthStatus: "Healthy; neutered", vaccinated: true, status: "Available", description: "Milo is curious, affectionate, and happiest near a sunny window.", image: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=700" },
+  { key: "coco", name: "Coco", species: "Dog", breed: "Beagle", age: 4, gender: "Female", location: "Bengaluru", healthStatus: "Healthy; regular checkups", vaccinated: true, status: "Available", description: "Coco is an energetic companion who loves gentle games and patient families.", image: "https://images.unsplash.com/photo-1552053831-71594a27632d?w=700" },
+  { key: "rio", name: "Rio", species: "Bird", breed: "Indian ringneck", age: 3, gender: "Male", location: "Hyderabad", healthStatus: "Healthy", vaccinated: false, status: "Available", description: "Rio is bright and social, with a cheerful personality and a love for attention.", image: "https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=700" },
+  { key: "bruno", name: "Bruno", species: "Dog", breed: "Labrador mix", age: 5, gender: "Male", location: "Nashik", healthStatus: "Healthy; calm temperament", vaccinated: true, status: "Pending", description: "Bruno is a loyal, easygoing dog currently meeting a prospective family.", image: "https://images.unsplash.com/photo-1591769225440-811ad7d6eab2?w=700" },
+  { key: "pepper", name: "Pepper", species: "Cat", breed: "Tuxedo mix", age: 2, gender: "Female", location: "Pune", healthStatus: "Healthy; indoor-ready", vaccinated: true, status: "Adopted", description: "Pepper is a quiet, affectionate cat who has found her forever home.", image: "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=700" },
 ];
 
 const requireDemoConfig = () => {
@@ -46,7 +46,13 @@ const getOrCreateUser = async ({ name, email, role }) => {
 
 const getOrCreatePet = async (pet, shelterId) => {
   const existing = await Pet.findOne({ demoKey: `demo-${pet.key}` });
-  if (existing) return existing;
+  if (existing) {
+    if (!existing.image && pet.image) {
+      existing.image = pet.image;
+      await existing.save();
+    }
+    return existing;
+  }
 
   return Pet.create({
     ...pet,
