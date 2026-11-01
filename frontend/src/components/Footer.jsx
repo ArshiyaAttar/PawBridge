@@ -22,7 +22,7 @@ export default function Footer() {
           </div>
         </div>
         <hr/>
-        <p className="mb-0 text-center small">Made with <Heart size={14} fill="currentColor"/> for animals · © {new Date().getFullYear()} PawBridge</p>
+        <p className="mb-0 text-center small">Made with <Heart size={14} fill="currentColor"/> for animals ï¿½ ï¿½ {new Date().getFullYear()} PawBridge</p>
       </div>
     </footer>
   );
