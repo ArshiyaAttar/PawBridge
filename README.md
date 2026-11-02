@@ -43,6 +43,7 @@ PawBridge/
 │   ├── src/index.css        # Application design system
 │   └── package.json
 ├── DEMO_GUIDE.md
+├── EMAIL_SETUP.md
 └── README.md
 ```
 
@@ -163,6 +164,8 @@ npm run seed:demo
 ```
 
 The seed creates four demo roles, sixteen fictional sample pets across puppy, adult, kitten, senior, bird, and special-care categories, and pending, approved, and rejected applications. It is repeat-safe, preserves existing records, and is intended for development databases only. See [DEMO_GUIDE.md](./DEMO_GUIDE.md) for the complete procedure.
+
+Email notifications use SMTP and are configured only through backend environment variables. See [EMAIL_SETUP.md](./EMAIL_SETUP.md) for Gmail, Brevo, local, and Render setup instructions.
 
 ## Testing and quality checks
 
