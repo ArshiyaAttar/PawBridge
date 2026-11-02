@@ -2,10 +2,11 @@ import Pet from "../models/Pet.js";
 
 export const getPets = async (req, res) => {
   try {
-    const { search, species, location, status } = req.query;
+    const { search, species, category, location, status } = req.query;
     const filter = { isActive: true };
 
     if (species) filter.species = species;
+    if (category) filter.category = category;
     if (location) filter.location = { $regex: location, $options: "i" };
     if (status) filter.status = status;
 
@@ -72,7 +73,7 @@ export const updatePet = async (req, res) => {
     }
 
     const allowed = [
-      "name", "species", "breed", "age", "gender", "description",
+      "name", "species", "category", "breed", "age", "gender", "description",
       "image", "location", "healthStatus", "vaccinated", "status"
     ];
 

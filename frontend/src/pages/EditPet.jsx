@@ -28,6 +28,7 @@ export default function EditPet() {
           setForm({
             name: pet.name || "",
             species: pet.species || "Dog",
+            category: pet.category || "Other",
             breed: pet.breed || "",
             age: pet.age ?? 0,
             gender: pet.gender || "Unknown",
@@ -159,6 +160,18 @@ export default function EditPet() {
             <option value="Dog">Dog</option>
             <option value="Cat">Cat</option>
             <option value="Bird">Bird</option>
+            <option value="Other">Other</option>
+          </select>
+
+          <label className="form-label">Category</label>
+          <select className="form-select mb-3" value={form.category} onChange={(e) => update("category", e.target.value)}>
+            <option value="Puppy">Puppy</option>
+            <option value="Adult Dog">Adult dog</option>
+            <option value="Kitten">Kitten</option>
+            <option value="Adult Cat">Adult cat</option>
+            <option value="Bird">Bird</option>
+            <option value="Senior">Senior</option>
+            <option value="Special Care">Special care</option>
             <option value="Other">Other</option>
           </select>
 

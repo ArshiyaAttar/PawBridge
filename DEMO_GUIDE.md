@@ -92,7 +92,7 @@ Do not publish the password value in a public repository or production frontend.
 
 ## 5. Sample pets and applications
 
-The seed script creates ten fictional sample pet profiles for local development: eight marked Available, one Pending, and one Adopted.
+The seed script creates sixteen fictional sample pet profiles for local development: fourteen marked Available, one Pending, and one Adopted.
 
 | Pet | Species | Status | Demo purpose |
 |---|---|---|---|
@@ -106,6 +106,14 @@ The seed script creates ten fictional sample pet profiles for local development:
 | Chiku | Cat | Available | Pandharpur-area listing |
 | Bruno | Dog | Pending | Pending adoption workflow |
 | Pepper | Cat | Adopted | Adopted status and history |
+| Buddy | Dog | Available | Puppy category and training expectations |
+| Simba | Cat | Available | Adult cat and quiet-home profile |
+| Daisy | Dog | Available | Senior pet adoption scenario |
+| Kiwi | Rabbit | Available | Other-species and enclosure guidance |
+| Zoro | Dog | Available | Special-care and accessibility scenario |
+| Sky | Bird | Available | Bird category and habitat guidance |
+
+The browse page supports puppy, adult dog, kitten, adult cat, senior, bird, and special-care categories. Shelters can assign or edit these categories from the add-pet and edit-pet forms.
 
 The homepage keeps API-backed adoption listings separate from a clearly labeled showcase of fictional sample profiles. Showcase cards cannot receive applications. Seeded profiles are also fictional local-development data, not verified or live adoption offers. The seed command is blocked in production mode and should only be used with a development database.
 

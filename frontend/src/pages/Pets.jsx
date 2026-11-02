@@ -28,6 +28,7 @@ export default function Pets() {
   const [pets, setPets] = useState([]);
   const [search, setSearch] = useState("");
   const [species, setSpecies] = useState("");
+  const [category, setCategory] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [retryKey, setRetryKey] = useState(0);
@@ -44,6 +45,7 @@ export default function Pets() {
           params: {
             search: search.trim(),
             species,
+            category,
             status: "Available",
           },
         });
@@ -65,11 +67,12 @@ export default function Pets() {
       active = false;
       clearTimeout(timer);
     };
-  }, [search, species, retryKey]);
+  }, [search, species, category, retryKey]);
 
   const clearFilters = () => {
     setSearch("");
     setSpecies("");
+    setCategory("");
   };
 
   return (
@@ -110,7 +113,7 @@ export default function Pets() {
               />
             </div>
           </div>
-          <div className="col-lg-4">
+          <div className="col-md-6 col-lg-2">
             <label className="form-label" htmlFor="species-filter">
               Animal type
             </label>
@@ -125,6 +128,19 @@ export default function Pets() {
               <option value="Cat">Cats</option>
               <option value="Bird">Birds</option>
               <option value="Other">Other</option>
+            </select>
+          </div>
+          <div className="col-md-6 col-lg-2">
+            <label className="form-label" htmlFor="category-filter">Category</label>
+            <select id="category-filter" className="form-select" value={category} onChange={(e) => setCategory(e.target.value)}>
+              <option value="">All stages</option>
+              <option value="Puppy">Puppies</option>
+              <option value="Adult Dog">Adult dogs</option>
+              <option value="Kitten">Kittens</option>
+              <option value="Adult Cat">Adult cats</option>
+              <option value="Senior">Seniors</option>
+              <option value="Bird">Birds</option>
+              <option value="Special Care">Special care</option>
             </select>
           </div>
         </div>
@@ -150,7 +166,7 @@ export default function Pets() {
             >
               Try again
             </button>
-            {(search || species) && (
+            {(search || species || category) && (
               <button
                 className="btn btn-outline-danger btn-sm"
                 onClick={clearFilters}

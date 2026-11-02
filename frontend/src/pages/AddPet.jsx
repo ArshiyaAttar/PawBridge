@@ -7,6 +7,7 @@ import API from "../services/api";
 const initialForm = {
   name: "",
   species: "Dog",
+  category: "Adult Dog",
   breed: "",
   age: 1,
   gender: "Unknown",
@@ -121,6 +122,20 @@ export default function AddPet() {
                 onChange={(e) => field("breed", e.target.value)}
                 placeholder="e.g. Labrador"
               />
+            </div>
+
+            <div className="col-md-6 mb-3">
+              <label className="form-label">Category</label>
+              <select className="form-select" value={form.category} onChange={(e) => field("category", e.target.value)}>
+                <option value="Puppy">Puppy</option>
+                <option value="Adult Dog">Adult dog</option>
+                <option value="Kitten">Kitten</option>
+                <option value="Adult Cat">Adult cat</option>
+                <option value="Bird">Bird</option>
+                <option value="Senior">Senior</option>
+                <option value="Special Care">Special care</option>
+                <option value="Other">Other</option>
+              </select>
             </div>
 
             <div className="col-md-6 mb-3">

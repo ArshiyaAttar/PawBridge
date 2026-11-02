@@ -3,6 +3,11 @@ import mongoose from "mongoose";
 const petSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
   species: { type: String, required: true, enum: ["Dog", "Cat", "Bird", "Other"] },
+  category: {
+    type: String,
+    enum: ["Puppy", "Adult Dog", "Kitten", "Adult Cat", "Bird", "Senior", "Special Care", "Other"],
+    default: "Other",
+  },
   breed: { type: String, default: "" },
   age: { type: Number, required: true, min: 0 },
   gender: { type: String, enum: ["Male", "Female", "Unknown"], default: "Unknown" },

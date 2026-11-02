@@ -187,7 +187,7 @@ export default function PetDetails() {
         </div>
 
         <div className="col-lg-6">
-          <span className="eyebrow">{pet.species} · {pet.breed || "Mixed breed"}</span>
+          <span className="eyebrow">{pet.category || pet.species} · {pet.breed || "Mixed breed"}</span>
           <h1 className="section-title mb-2">Meet {pet.name}</h1>
           <p className="paw-muted mb-4">
             A {getAgeLabel(pet.age).toLowerCase()} companion looking for a safe, loving home.
