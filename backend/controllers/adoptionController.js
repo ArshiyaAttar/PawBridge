@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import AdoptionApplication from "../models/AdoptionApplication.js";
 import Pet from "../models/Pet.js";
+import { sendSubmissionNotifications } from "../utils/submissionNotifications.js";
 
 export const applyForAdoption = async (req, res) => {
   try {
@@ -24,7 +25,37 @@ export const applyForAdoption = async (req, res) => {
       livingSituation
     });
 
-    res.status(201).json({ success: true, message: "Adoption application submitted", application });
+    const emailNotificationSent = await sendSubmissionNotifications({
+      adminSubject: `New adoption application for ${pet.name}`,
+      adminText: [
+        "A new adoption application was submitted on PawBridge.",
+        `Applicant: ${req.user.name} (${req.user.email})`,
+        `Pet: ${pet.name} (${pet.species})`,
+        `Application ID: ${application._id}`,
+        `Reason: ${reason}`,
+        `Previous experience: ${experience || "Not provided"}`,
+        `Living situation: ${livingSituation || "Not provided"}`,
+      ].join("\n"),
+      senderSubject: `We received your application for ${pet.name}`,
+      senderText: [
+        `Hello ${req.user.name},`,
+        "",
+        `We received your adoption application for ${pet.name}.`,
+        `Application ID: ${application._id}`,
+        "The shelter will review your application. You can track its status from your PawBridge account.",
+        "",
+        "Thank you for caring about animals.",
+        "PawBridge",
+      ].join("\n"),
+      senderEmail: req.user.email,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Adoption application submitted",
+      emailNotificationSent,
+      application,
+    });
   } catch (error) {
     if (error.code === 11000) {
       return res.status(409).json({ success: false, message: "You have already applied for this pet" });

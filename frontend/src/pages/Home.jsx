@@ -19,6 +19,97 @@ const fallbackImages = {
   Bird: "https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=700",
 };
 
+const samplePets = [
+  {
+    name: "Moti",
+    species: "Dog",
+    breed: "Indie mix",
+    age: 3,
+    gender: "Male",
+    location: "Solapur, Maharashtra",
+    temperament: "Friendly and people-oriented",
+    care: "Enjoys calm walks and regular play",
+    image: "https://images.unsplash.com/photo-1517849845537-4d257902454a?w=700",
+  },
+  {
+    name: "Gauri",
+    species: "Cat",
+    breed: "Domestic shorthair",
+    age: 1,
+    gender: "Female",
+    location: "Akkalkot, Maharashtra",
+    temperament: "Curious and gentle",
+    care: "Would enjoy a quiet indoor space",
+    image: "https://images.unsplash.com/photo-1574158622682-e40e69881006?w=700",
+  },
+  {
+    name: "Bittu",
+    species: "Dog",
+    breed: "Indie mix",
+    age: 1,
+    gender: "Male",
+    location: "Barshi, Maharashtra",
+    temperament: "Affectionate and playful",
+    care: "Still learning routines; responds well to patience",
+    image: "https://images.unsplash.com/photo-1551717743-49959800b1f6?w=700",
+  },
+  {
+    name: "Chiku",
+    species: "Cat",
+    breed: "Tabby mix",
+    age: 2,
+    gender: "Female",
+    location: "Pandharpur, Maharashtra",
+    temperament: "Relaxed and people-friendly",
+    care: "A calm indoor environment suits her best",
+    image: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=700",
+  },
+  {
+    name: "Luna",
+    species: "Dog",
+    breed: "Indie mix",
+    age: 2,
+    gender: "Female",
+    location: "Pune, Maharashtra",
+    temperament: "Gentle and affectionate",
+    care: "Loves walks and quiet time with people",
+    image: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=700",
+  },
+  {
+    name: "Milo",
+    species: "Cat",
+    breed: "Domestic shorthair",
+    age: 1,
+    gender: "Male",
+    location: "Mumbai, Maharashtra",
+    temperament: "Curious and sociable",
+    care: "Likes toys, sunny windows, and a steady routine",
+    image: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=700",
+  },
+  {
+    name: "Coco",
+    species: "Dog",
+    breed: "Beagle",
+    age: 4,
+    gender: "Female",
+    location: "Nashik, Maharashtra",
+    temperament: "Energetic and cheerful",
+    care: "Enjoys games and daily activity",
+    image: "https://images.unsplash.com/photo-1552053831-71594a27632d?w=700",
+  },
+  {
+    name: "Rio",
+    species: "Bird",
+    breed: "Indian ringneck",
+    age: 3,
+    gender: "Male",
+    location: "Kolhapur, Maharashtra",
+    temperament: "Bright and attentive",
+    care: "Needs daily enrichment and a spacious, safe habitat",
+    image: "https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=700",
+  },
+];
+
 const getAgeLabel = (age) => {
   if (age === 0) return "Under 1 year";
   return `${age} ${age === 1 ? "year" : "years"} old`;
@@ -64,7 +155,7 @@ export default function Home() {
     <>
       <section className="hero-section">
         <div className="container">
-          <div className="row align-items-center g-5">
+          <div className="row align-items-center g-4">
             <div className="col-lg-6">
               <span className="eyebrow"><PawPrint size={16}/> A bridge to a better life</span>
               <h1>Every pet deserves a <span>loving home.</span></h1>
@@ -195,6 +286,67 @@ export default function Home() {
               ))}
             </div>
           )}
+        </div>
+      </section>
+
+      <section className="sample-pets-section">
+        <div className="container paw-section">
+          <div className="text-center mb-4">
+            <span className="eyebrow">PAWBRIDGE SHOWCASE</span>
+            <h2 className="section-title mb-2">
+              Get to know our <span>sample profiles.</span>
+            </h2>
+            <p className="paw-muted mx-auto section-description">
+              Explore example pet profiles and the kind of care details a
+              thoughtful adoption listing can include.
+            </p>
+          </div>
+
+          <div className="alert alert-warning sample-pets-notice" role="note">
+            These are fictional showcase examples, not real pets or active
+            adoption listings. You cannot apply to adopt these sample profiles.
+          </div>
+
+          <div className="row g-4">
+            {samplePets.map((pet) => (
+              <div className="col-sm-6 col-lg-3" key={pet.name}>
+                <article className="pet-card sample-pet-card h-100">
+                  <div className="pet-card-image-wrap">
+                    <img
+                      src={pet.image || fallbackImages[pet.species]}
+                      alt={`Illustrative ${pet.species.toLowerCase()} profile for ${pet.name}`}
+                      className="pet-card-image"
+                      loading="lazy"
+                    />
+                    <span className="pet-status-badge sample-pet-badge">
+                      Sample profile
+                    </span>
+                  </div>
+                  <div className="p-4">
+                    <div className="d-flex justify-content-between align-items-start gap-2">
+                      <div>
+                        <h3 className="h4 fw-bold mb-1">{pet.name}</h3>
+                        <p className="paw-muted mb-3">
+                          {pet.breed} · {getAgeLabel(pet.age)}
+                        </p>
+                      </div>
+                      <span className="species-tag">{pet.species}</span>
+                    </div>
+                    <div className="pet-fact-list mb-3">
+                      <span><MapPin size={15} /> {pet.location}</span>
+                      <span><Heart size={15} /> {pet.gender}</span>
+                    </div>
+                    <p className="pet-description mb-2">
+                      <strong>Personality:</strong> {pet.temperament}
+                    </p>
+                    <p className="pet-description mb-0">
+                      <strong>Care:</strong> {pet.care}
+                    </p>
+                  </div>
+                </article>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 

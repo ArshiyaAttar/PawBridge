@@ -107,7 +107,7 @@ The seed script creates ten fictional sample pet profiles for local development:
 | Bruno | Dog | Pending | Pending adoption workflow |
 | Pepper | Cat | Adopted | Adopted status and history |
 
-The homepage reads available pets from the API; it does not contain hard-coded pet cards. Seeded profiles are fictional local-development data, not verified or live adoption offers. The seed command is blocked in production mode and should only be used with a development database.
+The homepage keeps API-backed adoption listings separate from a clearly labeled showcase of fictional sample profiles. Showcase cards cannot receive applications. Seeded profiles are also fictional local-development data, not verified or live adoption offers. The seed command is blocked in production mode and should only be used with a development database.
 
 It also creates three application records:
 
@@ -217,7 +217,16 @@ NODE_ENV=production
 MONGODB_URI=your_production_mongodb_uri
 JWT_SECRET=your_production_jwt_secret
 CLIENT_URL=https://paw-bridge-eta.vercel.app
+SMTP_HOST=your-smtp-host
+SMTP_PORT=587
+SMTP_USER=your-smtp-username
+SMTP_PASSWORD=your-smtp-password
+MAIL_FROM=verified-sender@example.com
+# Optional. If omitted, emails go to active admin accounts in the database.
+ADMIN_NOTIFICATION_EMAIL=admin@example.com
 ```
+
+Configure SMTP credentials and a verified sender in Render to enable email notifications. Adoption application and rescue report submissions notify active admin accounts (or the optional `ADMIN_NOTIFICATION_EMAIL` recipients) and send a confirmation to the submitting user's registered email. If SMTP is unavailable, the request is still saved and the user is told that email delivery failed.
 
 Do not set `ALLOW_DEMO_SEED=true` in production unless you intentionally run the guarded seed once against a dedicated demo database. Prefer running the seed from a secure Render shell or a local machine connected to the demonstration database.
 

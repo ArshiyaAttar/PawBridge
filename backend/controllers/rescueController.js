@@ -1,5 +1,6 @@
 import RescueReport from "../models/RescueReport.js";
 import User from "../models/User.js";
+import { sendSubmissionNotifications } from "../utils/submissionNotifications.js";
 
 export const createRescueReport = async (req, res) => {
   try {
@@ -18,7 +19,40 @@ export const createRescueReport = async (req, res) => {
       image: req.body.image || ""
     });
 
-    res.status(201).json({ success: true, message: "Rescue report submitted", report });
+    const emailNotificationSent = await sendSubmissionNotifications({
+      adminSubject: `New ${animalType} rescue report`,
+      adminText: [
+        "A new animal rescue report was submitted on PawBridge.",
+        `Reporter: ${req.user.name} (${req.user.email})`,
+        `Animal type: ${animalType}`,
+        `Location: ${location}`,
+        `Contact phone: ${contactPhone}`,
+        `Report ID: ${report._id}`,
+        `Description: ${description}`,
+      ].join("\n"),
+      senderSubject: "We received your PawBridge rescue report",
+      senderText: [
+        `Hello ${req.user.name},`,
+        "",
+        "We received your animal rescue report.",
+        `Report ID: ${report._id}`,
+        `Animal type: ${animalType}`,
+        `Reported location: ${location}`,
+        "You can track updates from your PawBridge account.",
+        "",
+        "If the animal is in immediate danger, contact local rescue services or emergency authorities directly.",
+        "",
+        "PawBridge",
+      ].join("\n"),
+      senderEmail: req.user.email,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Rescue report submitted",
+      emailNotificationSent,
+      report,
+    });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }

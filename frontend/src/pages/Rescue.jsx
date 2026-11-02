@@ -31,6 +31,7 @@ export default function Rescue() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [emailNotificationSent, setEmailNotificationSent] = useState(null);
 
   const updateField = (e) => {
     const { name, value } = e.target;
@@ -69,6 +70,7 @@ export default function Rescue() {
       });
 
       setMessage(data.message || "Your rescue report has been submitted successfully.");
+      setEmailNotificationSent(data.emailNotificationSent === true);
       setSubmitted(true);
       setForm(initialForm);
     } catch (err) {
@@ -115,6 +117,13 @@ export default function Rescue() {
                   <div>
                     <strong>Report submitted!</strong>
                     <p className="mb-2">{message}</p>
+                    {emailNotificationSent === false && (
+                      <p className="mb-2">
+                        Your report is saved, but we couldn't send the email
+                        notifications. Please contact PawBridge support if you
+                        need confirmation.
+                      </p>
+                    )}
                     <Link to="/my-rescues" className="alert-link">
                       Track your rescue report
                     </Link>

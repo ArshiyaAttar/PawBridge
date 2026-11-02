@@ -108,7 +108,13 @@ export default function PetDetails() {
         livingSituation: livingSituation.trim(),
       });
       setSubmitted(true);
-      setMessage(data.message || "Your adoption application was submitted!");
+      const emailNotice =
+        data.emailNotificationSent === false
+          ? " Your application is saved, but we couldn't send the email notifications."
+          : "";
+      setMessage(
+        `${data.message || "Your adoption application was submitted!"}${emailNotice}`
+      );
     } catch (err) {
       setMessage(err.response?.data?.message || "Application failed.");
     } finally {

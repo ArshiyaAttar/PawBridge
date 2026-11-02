@@ -147,6 +147,10 @@ img { max-width: 100%; }
 .image-caption { position:absolute;bottom:18px;left:18px;background:white;padding:13px 18px;border-radius:12px;font-weight:600; }
 .hero-note { color:#287a55;font-weight:600; }
 .home-pets-section { background:linear-gradient(180deg,#fff 0%,#f7faf6 100%); }
+.sample-pets-section { background:#f6f8f3; }
+.sample-pets-notice { max-width:860px; margin:0 auto 1.5rem; }
+.sample-pet-card { border-style:dashed; }
+.sample-pet-badge { background:#59685f; }
 .home-pet-link { display:block;height:100%;color:inherit;text-decoration:none;border-radius:22px; }
 .home-pet-link:hover,.home-pet-link:focus-visible { color:inherit; }
 .home-pet-link .pet-card-image { transition:transform 220ms ease; }
