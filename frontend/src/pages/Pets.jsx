@@ -19,6 +19,13 @@ const fallbackImages = {
   Bird: "https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=700",
 };
 
+const samplePets = [
+  { name: "Moti", species: "Dog", category: "Adult Dog", breed: "Indie mix", age: 3, location: "Solapur, Maharashtra", temperament: "Friendly and people-oriented", image: "https://images.unsplash.com/photo-1517849845537-4d257902454a?w=700" },
+  { name: "Gauri", species: "Cat", category: "Kitten", breed: "Domestic shorthair", age: 1, location: "Akkalkot, Maharashtra", temperament: "Curious and gentle", image: "https://images.unsplash.com/photo-1574158622682-e40e69881006?w=700" },
+  { name: "Daisy", species: "Dog", category: "Senior", breed: "Indie mix", age: 9, location: "Jaipur, Rajasthan", temperament: "Calm and affectionate", image: "https://images.unsplash.com/photo-1558788353-f76d92427f16?w=700" },
+  { name: "Kiwi", species: "Other", category: "Special Care", breed: "Rabbit", age: 2, location: "Kolkata, West Bengal", temperament: "Soft-natured and curious", image: "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=700" },
+];
+
 const getAgeLabel = (age) => {
   if (age === 0) return "Under 1 year";
   return `${age} ${age === 1 ? "year" : "years"} old`;
@@ -246,6 +253,41 @@ export default function Pets() {
             </div>
           ))}
       </div>
+
+      {!loading && !error && pets.length === 0 && !search && !species && !category && (
+        <section className="sample-pets-section mt-5" aria-labelledby="sample-profiles-title">
+          <div className="text-center mb-4">
+            <span className="eyebrow">PAWBRIDGE SHOWCASE</span>
+            <h2 id="sample-profiles-title" className="section-title mb-2">Explore sample <span>profiles.</span></h2>
+            <p className="paw-muted mx-auto section-description">
+              These fictional examples demonstrate the detail a complete adoption listing can include. They are not live listings and cannot receive applications.
+            </p>
+          </div>
+          <div className="row g-4">
+            {samplePets.map((pet) => (
+              <div className="col-sm-6 col-lg-3" key={pet.name}>
+                <article className="pet-card sample-pet-card h-100">
+                  <div className="pet-card-image-wrap">
+                    <img src={pet.image} alt={`Sample ${pet.species} profile for ${pet.name}`} className="pet-card-image" loading="lazy" />
+                    <span className="pet-status-badge sample-pet-badge">Sample profile</span>
+                  </div>
+                  <div className="p-4">
+                    <div className="d-flex justify-content-between align-items-start gap-2">
+                      <div>
+                        <h3 className="h5 fw-bold mb-1">{pet.name}</h3>
+                        <p className="paw-muted mb-2">{pet.breed} · {getAgeLabel(pet.age)}</p>
+                      </div>
+                      <span className="species-tag">{pet.category}</span>
+                    </div>
+                    <p className="pet-fact-list mb-2"><MapPin size={15} /> {pet.location}</p>
+                    <p className="pet-description mb-0"><strong>Personality:</strong> {pet.temperament}</p>
+                  </div>
+                </article>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }

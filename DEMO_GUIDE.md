@@ -115,7 +115,7 @@ The seed script creates sixteen fictional sample pet profiles for local developm
 
 The browse page supports puppy, adult dog, kitten, adult cat, senior, bird, and special-care categories. Shelters can assign or edit these categories from the add-pet and edit-pet forms.
 
-The homepage keeps API-backed adoption listings separate from a clearly labeled showcase of fictional sample profiles. Showcase cards cannot receive applications. Seeded profiles are also fictional local-development data, not verified or live adoption offers. The seed command is blocked in production mode and should only be used with a development database.
+The homepage and Browse Pets page keep API-backed adoption listings separate from clearly labeled showcase profiles. Showcase cards cannot receive applications. Seeded profiles are fictional local-development data, not verified or live adoption offers. The seed command is blocked in production mode and should only be used with a development database.
 
 It also creates three application records:
 
