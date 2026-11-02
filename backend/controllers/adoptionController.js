@@ -1,7 +1,12 @@
 import mongoose from "mongoose";
 import AdoptionApplication from "../models/AdoptionApplication.js";
 import Pet from "../models/Pet.js";
-import { sendSubmissionNotifications } from "../utils/submissionNotifications.js";
+import {
+  buildSubmissionEmail,
+  buildSubmitterConfirmationEmail,
+  buildAdoptionStatusEmail,
+} from "../services/emailTemplates.js";
+import { sendEmailNotifications } from "../services/emailService.js";
 
 export const applyForAdoption = async (req, res) => {
   try {
@@ -25,35 +30,48 @@ export const applyForAdoption = async (req, res) => {
       livingSituation
     });
 
-    const emailNotificationSent = await sendSubmissionNotifications({
-      adminSubject: `New adoption application for ${pet.name}`,
-      adminText: [
-        "A new adoption application was submitted on PawBridge.",
-        `Applicant: ${req.user.name} (${req.user.email})`,
-        `Pet: ${pet.name} (${pet.species})`,
-        `Application ID: ${application._id}`,
-        `Reason: ${reason}`,
-        `Previous experience: ${experience || "Not provided"}`,
-        `Living situation: ${livingSituation || "Not provided"}`,
-      ].join("\n"),
-      senderSubject: `We received your application for ${pet.name}`,
-      senderText: [
-        `Hello ${req.user.name},`,
-        "",
-        `We received your adoption application for ${pet.name}.`,
-        `Application ID: ${application._id}`,
-        "The shelter will review your application. You can track its status from your PawBridge account.",
-        "",
-        "Thank you for caring about animals.",
-        "PawBridge",
-      ].join("\n"),
-      senderEmail: req.user.email,
+    const applicationDetails = [
+      { label: "Applicant", value: req.user.name },
+      { label: "Applicant email", value: req.user.email },
+      { label: "Pet", value: `${pet.name} (${pet.species})` },
+      { label: "Application ID", value: application._id },
+      { label: "Reason", value: reason },
+      { label: "Previous experience", value: experience || "Not provided" },
+      { label: "Living situation", value: livingSituation || "Not provided" },
+    ];
+    const adminEmail = buildSubmissionEmail({
+      kind: "adoption",
+      details: applicationDetails,
     });
+    const confirmationEmail = buildSubmitterConfirmationEmail({
+      kind: "adoption",
+      name: req.user.name,
+      details: [
+        { label: "Pet", value: pet.name },
+        { label: "Application ID", value: application._id },
+      ],
+    });
+    const emailResults = await sendEmailNotifications([
+      {
+        eventKey: `adoption-submitted:${application._id}`,
+        type: "admin_submission",
+        to: process.env.ADMIN_NOTIFICATION_EMAIL,
+        subject: `New adoption application for ${pet.name}`,
+        ...adminEmail,
+      },
+      {
+        eventKey: `adoption-submitted:${application._id}`,
+        type: "submitter_confirmation",
+        to: req.user.email,
+        subject: `We received your application for ${pet.name}`,
+        ...confirmationEmail,
+      },
+    ]);
 
     res.status(201).json({
       success: true,
       message: "Adoption application submitted",
-      emailNotificationSent,
+      emailNotificationSent: emailResults.allSent,
       application,
     });
   } catch (error) {
@@ -105,6 +123,7 @@ export const getShelterApplications = async (req, res) => {
 
 export const reviewApplication = async (req, res) => {
   const session = await mongoose.startSession();
+  let autoRejectedApplications = [];
 
   try {
     const { status, shelterNotes } = req.body;
@@ -119,6 +138,7 @@ export const reviewApplication = async (req, res) => {
     }
 
     await session.withTransaction(async () => {
+      autoRejectedApplications = [];
       const application = await AdoptionApplication.findById(
         req.params.id
       )
@@ -183,7 +203,17 @@ export const reviewApplication = async (req, res) => {
           throw error;
         }
 
-        // Reject all other pending applications for this pet.
+        const otherApplications = await AdoptionApplication.find({
+          pet: application.pet._id,
+          _id: { $ne: application._id },
+          status: { $in: ["Pending", "Under Review"] },
+        })
+          .select("_id applicant pet")
+          .populate("pet", "name species")
+          .populate("applicant", "name email")
+          .session(session);
+        autoRejectedApplications = otherApplications;
+
         await AdoptionApplication.updateMany(
           {
             pet: application.pet._id,
@@ -216,9 +246,51 @@ export const reviewApplication = async (req, res) => {
       .populate("pet")
       .populate("applicant", "name email phone");
 
+    const notificationRequests = [];
+    if (["Approved", "Rejected"].includes(status)) {
+      const applicant = updatedApplication?.applicant;
+      const pet = updatedApplication?.pet;
+      if (applicant?.email && pet) {
+        notificationRequests.push({
+          eventKey: `adoption-status:${updatedApplication._id}:${status}`,
+          type: "adoption_status",
+          to: applicant.email,
+          subject: `Your application for ${pet.name} was ${status.toLowerCase()}`,
+          ...buildAdoptionStatusEmail({
+            name: applicant.name,
+            petName: pet.name,
+            status,
+          }),
+        });
+      }
+    }
+
+    if (autoRejectedApplications.length > 0) {
+      for (const application of autoRejectedApplications) {
+        if (!application.applicant?.email || !application.pet) continue;
+
+        notificationRequests.push({
+          eventKey: `adoption-status:${application._id}:Rejected`,
+          type: "adoption_status",
+          to: application.applicant.email,
+          subject: `Your application for ${application.pet.name} was rejected`,
+          ...buildAdoptionStatusEmail({
+            name: application.applicant.name,
+            petName: application.pet.name,
+            status: "Rejected",
+          }),
+        });
+      }
+    }
+
+    const emailResults = notificationRequests.length
+      ? await sendEmailNotifications(notificationRequests)
+      : { allSent: true };
+
     res.status(200).json({
       success: true,
       message: "Application reviewed successfully",
+      emailNotificationSent: emailResults.allSent,
       application: updatedApplication,
     });
   } catch (error) {

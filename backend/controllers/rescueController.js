@@ -1,6 +1,12 @@
 import RescueReport from "../models/RescueReport.js";
 import User from "../models/User.js";
-import { sendSubmissionNotifications } from "../utils/submissionNotifications.js";
+import {
+  buildSubmissionEmail,
+  buildSubmitterConfirmationEmail,
+  buildRescueAssignmentEmail,
+  buildRescueResolvedEmail,
+} from "../services/emailTemplates.js";
+import { sendEmailNotifications } from "../services/emailService.js";
 
 export const createRescueReport = async (req, res) => {
   try {
@@ -19,38 +25,49 @@ export const createRescueReport = async (req, res) => {
       image: req.body.image || ""
     });
 
-    const emailNotificationSent = await sendSubmissionNotifications({
-      adminSubject: `New ${animalType} rescue report`,
-      adminText: [
-        "A new animal rescue report was submitted on PawBridge.",
-        `Reporter: ${req.user.name} (${req.user.email})`,
-        `Animal type: ${animalType}`,
-        `Location: ${location}`,
-        `Contact phone: ${contactPhone}`,
-        `Report ID: ${report._id}`,
-        `Description: ${description}`,
-      ].join("\n"),
-      senderSubject: "We received your PawBridge rescue report",
-      senderText: [
-        `Hello ${req.user.name},`,
-        "",
-        "We received your animal rescue report.",
-        `Report ID: ${report._id}`,
-        `Animal type: ${animalType}`,
-        `Reported location: ${location}`,
-        "You can track updates from your PawBridge account.",
-        "",
-        "If the animal is in immediate danger, contact local rescue services or emergency authorities directly.",
-        "",
-        "PawBridge",
-      ].join("\n"),
-      senderEmail: req.user.email,
+    const reportDetails = [
+      { label: "Reporter", value: req.user.name },
+      { label: "Reporter email", value: req.user.email },
+      { label: "Animal type", value: animalType },
+      { label: "Location", value: location },
+      { label: "Contact phone", value: contactPhone },
+      { label: "Report ID", value: report._id },
+      { label: "Description", value: description },
+    ];
+    const adminEmail = buildSubmissionEmail({
+      kind: "rescue",
+      details: reportDetails,
     });
+    const confirmationEmail = buildSubmitterConfirmationEmail({
+      kind: "rescue",
+      name: req.user.name,
+      details: [
+        { label: "Animal type", value: animalType },
+        { label: "Location", value: location },
+        { label: "Report ID", value: report._id },
+      ],
+    });
+    const emailResults = await sendEmailNotifications([
+      {
+        eventKey: `rescue-submitted:${report._id}`,
+        type: "admin_submission",
+        to: process.env.ADMIN_NOTIFICATION_EMAIL,
+        subject: `New ${animalType} rescue report`,
+        ...adminEmail,
+      },
+      {
+        eventKey: `rescue-submitted:${report._id}`,
+        type: "submitter_confirmation",
+        to: req.user.email,
+        subject: "We received your PawBridge rescue report",
+        ...confirmationEmail,
+      },
+    ]);
 
     res.status(201).json({
       success: true,
       message: "Rescue report submitted",
-      emailNotificationSent,
+      emailNotificationSent: emailResults.allSent,
       report,
     });
   } catch (error) {
@@ -95,6 +112,8 @@ export const updateRescueReport = async (req, res) => {
       });
     }
 
+    const previousStatus = report.status;
+    const previousAssigneeId = report.assignedRescuer?.toString() || "";
     const { status, rescueNotes, assignedRescuer } = req.body;
 
     if (req.user.role === "admin") {
@@ -183,9 +202,54 @@ export const updateRescueReport = async (req, res) => {
     await report.populate("reporter", "name email phone");
     await report.populate("assignedRescuer", "name email phone");
 
+    const notificationRequests = [];
+    const currentAssigneeId = report.assignedRescuer?._id?.toString() || "";
+    if (
+      currentAssigneeId &&
+      currentAssigneeId !== previousAssigneeId &&
+      report.assignedRescuer?.email
+    ) {
+      notificationRequests.push({
+        eventKey: `rescue-assigned:${report._id}:${report.updatedAt.toISOString()}`,
+        type: "rescue_assignment",
+        to: report.assignedRescuer.email,
+        subject: "A PawBridge rescue case was assigned to you",
+        ...buildRescueAssignmentEmail({
+          rescuerName: report.assignedRescuer.name,
+          animalType: report.animalType,
+          location: report.location,
+          reportId: report._id,
+        }),
+      });
+    }
+
+    if (
+      previousStatus !== "Resolved" &&
+      report.status === "Resolved" &&
+      report.reporter?.email
+    ) {
+      notificationRequests.push({
+        eventKey: `rescue-resolved:${report._id}:${report.updatedAt.toISOString()}`,
+        type: "rescue_resolution",
+        to: report.reporter.email,
+        subject: "Your PawBridge rescue report was resolved",
+        ...buildRescueResolvedEmail({
+          reporterName: report.reporter.name,
+          animalType: report.animalType,
+          location: report.location,
+          reportId: report._id,
+        }),
+      });
+    }
+
+    const emailResults = notificationRequests.length
+      ? await sendEmailNotifications(notificationRequests)
+      : { allSent: true };
+
     res.status(200).json({
       success: true,
       message: "Rescue report updated",
+      emailNotificationSent: emailResults.allSent,
       report,
     });
   } catch (error) {

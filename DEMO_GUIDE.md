@@ -225,16 +225,25 @@ NODE_ENV=production
 MONGODB_URI=your_production_mongodb_uri
 JWT_SECRET=your_production_jwt_secret
 CLIENT_URL=https://paw-bridge-eta.vercel.app
-SMTP_HOST=your-smtp-host
+SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USER=your-smtp-username
-SMTP_PASSWORD=your-smtp-password
-MAIL_FROM=verified-sender@example.com
-# Optional. If omitted, emails go to active admin accounts in the database.
-ADMIN_NOTIFICATION_EMAIL=admin@example.com
+SMTP_USER=your-sender@gmail.com
+SMTP_PASSWORD=your-google-app-password
+MAIL_FROM=your-sender@gmail.com
+ADMIN_NOTIFICATION_EMAIL=your-admin-email@example.com
+EMAIL_NOTIFICATIONS_ENABLED=true
+EMAIL_NOTIFY_ADMIN=true
+EMAIL_NOTIFY_SUBMITTER=true
+EMAIL_NOTIFY_ADOPTION_STATUS=true
+EMAIL_NOTIFY_RESCUE_ASSIGNMENT=true
+EMAIL_NOTIFY_RESCUE_RESOLVED=true
 ```
 
-Configure SMTP credentials and a verified sender in Render to enable email notifications. Adoption application and rescue report submissions notify active admin accounts (or the optional `ADMIN_NOTIFICATION_EMAIL` recipients) and send a confirmation to the submitting user's registered email. If SMTP is unavailable, the request is still saved and the user is told that email delivery failed.
+Set these as individual environment variables in the Render backend service. For Gmail, enable 2-Step Verification on the sender account and create a Google App Password; use that App Password for `SMTP_PASSWORD`, never the account password. `SMTP_USER` and `MAIL_FROM` should be the sender account, while `ADMIN_NOTIFICATION_EMAIL` is the admin recipient address (comma-separated addresses are supported). Keep all credentials in Render, not in Git or frontend variables.
+
+When enabled, new adoption applications and rescue reports notify the configured admin and send a confirmation to the submitting user's registered email. Adoption approval/rejection, rescue assignment, and rescue resolution send event-specific messages. Set `EMAIL_NOTIFICATIONS_ENABLED=false` to turn off all mail, or set an individual `EMAIL_NOTIFY_*` value to `false` to disable that category.
+
+Email delivery is best-effort and idempotent: the database operation succeeds independently of SMTP, and a delivery ledger prevents duplicate sends for the same event and recipient. Failures are logged using notification type and sanitized error code only; delivery records can be inspected in the `emailnotifications` collection. If SMTP is unavailable, the request is still saved and the API response reports that the email notification was not sent.
 
 Do not set `ALLOW_DEMO_SEED=true` in production unless you intentionally run the guarded seed once against a dedicated demo database. Prefer running the seed from a secure Render shell or a local machine connected to the demonstration database.
 

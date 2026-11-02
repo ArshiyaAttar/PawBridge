@@ -25,6 +25,7 @@ export default function AdminRescues() {
   const [rescuers, setRescuers] = useState([]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [emailWarning, setEmailWarning] = useState("");
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);
   const [search, setSearch] = useState("");
@@ -73,12 +74,17 @@ export default function AdminRescues() {
       setMessage("");
       setError("");
 
-      await API.patch(`/rescues/${report._id}`, {
+      const { data } = await API.patch(`/rescues/${report._id}`, {
         assignedRescuer,
         status: "Assigned",
       });
 
       setMessage("Rescuer assigned successfully.");
+      setEmailWarning(
+        data.emailNotificationSent === false
+          ? "The case was assigned, but its email notification could not be sent. Check the backend email configuration and logs."
+          : ""
+      );
       await loadData();
     } catch (err) {
       setError(err.response?.data?.message || "Unable to assign rescuer.");
@@ -100,9 +106,14 @@ export default function AdminRescues() {
       setMessage("");
       setError("");
 
-      await API.patch(`/rescues/${report._id}`, { status });
+      const { data } = await API.patch(`/rescues/${report._id}`, { status });
 
       setMessage(`Rescue case updated to ${status}.`);
+      setEmailWarning(
+        data.emailNotificationSent === false
+          ? "The case was updated, but its email notification could not be sent. Check the backend email configuration and logs."
+          : ""
+      );
       await loadData();
     } catch (err) {
       setError(err.response?.data?.message || "Unable to update rescue status.");
@@ -159,6 +170,7 @@ export default function AdminRescues() {
 
       {message && <div className="alert alert-success">{message}</div>}
       {error && <div className="alert alert-danger">{error}</div>}
+      {emailWarning && <div className="alert alert-warning">{emailWarning}</div>}
 
       <div className="row g-3 mb-4">
         <div className="col-6 col-lg-3">

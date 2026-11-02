@@ -15,6 +15,7 @@ export default function RescuerDashboard() {
   const [reports, setReports] = useState([]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [emailWarning, setEmailWarning] = useState("");
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);
   const [filter, setFilter] = useState("All");
@@ -43,7 +44,7 @@ export default function RescuerDashboard() {
       setMessage("");
       setError("");
 
-      await API.patch(`/rescues/${id}`, {
+      const { data } = await API.patch(`/rescues/${id}`, {
         status,
         rescueNotes:
           notes[id]?.trim() ||
@@ -53,6 +54,11 @@ export default function RescuerDashboard() {
       });
 
       setMessage(`Rescue case marked as ${status}.`);
+      setEmailWarning(
+        data.emailNotificationSent === false
+          ? "The case was updated, but its email notification could not be sent. Check the backend email configuration and logs."
+          : ""
+      );
       setNotes((previous) => ({ ...previous, [id]: "" }));
       await loadReports();
     } catch (err) {
@@ -96,6 +102,7 @@ export default function RescuerDashboard() {
 
       {message && <div className="alert alert-success">{message}</div>}
       {error && <div className="alert alert-danger">{error}</div>}
+      {emailWarning && <div className="alert alert-warning">{emailWarning}</div>}
 
       <div className="row g-3 mb-4">
         <div className="col-6 col-lg-4">

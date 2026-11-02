@@ -18,6 +18,7 @@ export default function ManageApplications() {
   const [applications, setApplications] = useState([]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [emailWarning, setEmailWarning] = useState("");
   const [loading, setLoading] = useState(true);
   const [reviewingId, setReviewingId] = useState(null);
   const [activeFilter, setActiveFilter] = useState("All");
@@ -59,12 +60,17 @@ export default function ManageApplications() {
       setMessage("");
       setError("");
 
-      await API.patch(`/adoptions/${id}/review`, {
+      const { data } = await API.patch(`/adoptions/${id}/review`, {
         status,
         shelterNotes: notes[id] || "",
       });
 
       setMessage(`Application successfully marked as ${status}.`);
+      setEmailWarning(
+        data.emailNotificationSent === false
+          ? "The application was updated, but its email notification could not be sent. Check the backend email configuration and logs."
+          : ""
+      );
       await loadApplications();
     } catch (err) {
       setError(
@@ -151,6 +157,7 @@ export default function ManageApplications() {
           />
         </div>
       )}
+      {emailWarning && <div className="alert alert-warning">{emailWarning}</div>}
 
       <div className="row g-3 mb-4">
         <div className="col-6 col-lg">
