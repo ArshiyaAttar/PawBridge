@@ -24,6 +24,8 @@ export default function Dashboard() {
   const links = {
     adopter: [
       { title: "Browse pets", url: "/pets", icon: PawPrint },
+      { title: "List a pet", url: "/list-pet", icon: HeartHandshake },
+      { title: "My pet listings", url: "/my-listings", icon: PawPrint },
       { title: "My applications", url: "/my-applications", icon: ClipboardList },
       { title: "Report an animal", url: "/rescue", icon: HeartHandshake },
       { title: "My rescue reports", url: "/my-rescues", icon: Activity },
@@ -40,6 +42,8 @@ export default function Dashboard() {
     ],
     rescuer: [
       { title: "Rescue dashboard", url: "/rescuer", icon: Activity },
+      { title: "List a pet", url: "/list-pet", icon: HeartHandshake },
+      { title: "My pet listings", url: "/my-listings", icon: PawPrint },
       { title: "My profile", url: "/profile", icon: User },
       { title: "Change password", url: "/change-password", icon: Settings },
     ],
@@ -48,6 +52,7 @@ export default function Dashboard() {
       { title: "Manage users", url: "/admin/users", icon: User },
       { title: "Manage rescue cases", url: "/admin/rescues", icon: Activity },
       { title: "Manage pets", url: "/shelter/pets", icon: PawPrint },
+      { title: "Pet listing requests", url: "/admin/pet-listings", icon: ClipboardList },
       { title: "My profile", url: "/profile", icon: User },
       { title: "Change password", url: "/change-password", icon: Settings },
     ],

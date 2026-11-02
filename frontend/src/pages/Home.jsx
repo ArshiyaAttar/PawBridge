@@ -12,6 +12,7 @@ import {
   FileText,
 } from "lucide-react";
 import API from "../services/api";
+import { getPetImageSrc } from "../services/petImages";
 
 const fallbackImages = {
   Dog: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=700",
@@ -244,7 +245,7 @@ export default function Home() {
                     <article className="pet-card h-100">
                       <div className="pet-card-image-wrap">
                         <img
-                          src={pet.image || fallbackImages[pet.species] || fallbackImages.Dog}
+                          src={getPetImageSrc(pet) || fallbackImages[pet.species] || fallbackImages.Dog}
                           alt={`${pet.name}, ${pet.species}`}
                           className="pet-card-image"
                           loading="lazy"
@@ -313,7 +314,7 @@ export default function Home() {
                 <article className="pet-card sample-pet-card h-100">
                   <div className="pet-card-image-wrap">
                     <img
-                      src={pet.image || fallbackImages[pet.species]}
+                      src={getPetImageSrc(pet) || fallbackImages[pet.species]}
                       alt={`Illustrative ${pet.species.toLowerCase()} profile for ${pet.name}`}
                       className="pet-card-image"
                       loading="lazy"

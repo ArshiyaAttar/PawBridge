@@ -69,6 +69,12 @@ export default function Navbar() {
                   <NavLink to="/dashboard" className={linkClass}>
                     Dashboard
                   </NavLink>
+                  <NavLink to="/list-pet" className={linkClass}>
+                    List a pet
+                  </NavLink>
+                  <NavLink to="/my-listings" className={linkClass}>
+                    My listings
+                  </NavLink>
                   {user.role === "adopter" && (
                     <NavLink to="/my-applications" className={linkClass}>
                       Applications

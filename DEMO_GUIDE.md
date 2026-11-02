@@ -79,16 +79,16 @@ cd backend
 npm run seed:demo
 ```
 
-The script creates these role accounts if they do not already exist:
+The script creates these role accounts if they do not already exist. Existing adopter, shelter, and rescuer demo profiles are updated to the listed email addresses without changing their IDs:
 
 | Role | Email | Password |
 |---|---|---|
 | Admin | `admin@pawbridge.demo` | Value of `DEMO_PASSWORD` |
-| Adopter | `adopter@pawbridge.demo` | Value of `DEMO_PASSWORD` |
-| Shelter | `shelter@pawbridge.demo` | Value of `DEMO_PASSWORD` |
-| Rescuer | `rescuer@pawbridge.demo` | Value of `DEMO_PASSWORD` |
+| Adopter | `pawbridge.demo.adopter@gmail.com` | Value of `DEMO_PASSWORD` |
+| Shelter | `pawbridge.demo.shelter@gmail.com` | Value of `DEMO_PASSWORD` |
+| Rescuer | `pawbridge.demo.rescuer@gmail.com` | Value of `DEMO_PASSWORD` |
 
-Do not publish the password value in a public repository or production frontend.
+These are demo login identifiers only; the seed does not create or verify Gmail inboxes. Set `EMAIL_NOTIFICATIONS_ENABLED=false` in local `.env` during demonstrations unless you own the recipient addresses. Do not publish the password value in a public repository or production frontend.
 
 ## 5. Sample pets and applications
 
@@ -137,7 +137,8 @@ Existing records are preserved. Demo pets use internal demo keys so repeated see
 6. Review age, gender, location, health, and vaccination information.
 7. Send a question to the shelter.
 8. Complete the adoption application form.
-9. Open **My Applications** and show the status.
+9. Optionally request home delivery and provide the destination address.
+10. Open **My Applications** and show the status, fee, and delivery decision.
 
 ### Shelter flow
 
@@ -146,8 +147,12 @@ Existing records are preserved. Demo pets use internal demo keys so repeated see
 3. Review managed pets.
 4. Open adoption applications.
 5. Review applicant details.
-6. Move an application under review, approve it, or reject it.
-7. Confirm that an approved pet becomes adopted and competing applications are rejected.
+6. Set an adoption fee on a pet listing; use ₹0 for a no-fee adoption.
+7. Move an application under review, approve it, or reject it. For a delivery request, choose whether delivery is possible.
+8. At handoff, record COD collection for an approved application with a fee.
+9. Confirm that an approved pet becomes adopted and competing applications are rejected.
+
+Any signed-in user can submit a pet listing with a JPEG, PNG, or WebP photo (up to 5 MB) and a contact phone number. Submissions and subsequent edits stay hidden until an admin approves them from **Pet listing requests**. Rejected listings include admin feedback and can be edited and resubmitted. Photos are stored with pet records in MongoDB.
 
 ### Rescuer flow
 
@@ -156,6 +161,7 @@ Existing records are preserved. Demo pets use internal demo keys so repeated see
 3. Review assigned rescue cases.
 4. Update progress and add rescue notes.
 5. Mark a completed case as resolved.
+6. Confirm collection of any pledged cash donation on an assigned case.
 
 ### Admin flow
 
@@ -164,6 +170,7 @@ Existing records are preserved. Demo pets use internal demo keys so repeated see
 3. Review users, pets, applications, and rescue statistics.
 4. Change user roles or account status where appropriate.
 5. Review rescue management and platform activity.
+6. Confirm collection of cash donation pledges when received.
 
 ## 7. Adoption workflow rules
 
@@ -174,6 +181,11 @@ Existing records are preserved. Demo pets use internal demo keys so repeated see
 - Approving an application changes the pet to `Adopted`.
 - Other pending applications for an adopted pet are rejected automatically.
 - Applicants can view only their own application history.
+- Pet listings from any signed-in user are private until an admin approves them; edits to a listing return it to pending review.
+- Adoption applications include a reachable phone number, household consent, and pet-care plan; a veterinarian reference is optional.
+- Adoption fees are set per pet, snapshotted when an application is submitted, and recorded as COD only after shelter/admin confirmation at handoff. This records a cash collection; no online payment processor is integrated.
+- Home delivery requests are considered case by case. A shelter must approve availability and confirm any delivery charges; no carrier or delivery charge is automatically arranged.
+- Rescue donations are optional cash pledges, not online payments. An admin or the assigned rescuer records collection after receiving the cash.
 
 ## 8. Messaging workflow
 

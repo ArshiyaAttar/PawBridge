@@ -68,6 +68,33 @@ export default function RescuerDashboard() {
     }
   };
 
+  const collectDonation = async (report) => {
+    if (
+      !window.confirm(
+        `Confirm that ₹${Number(report.donationAmount).toLocaleString("en-IN")} was received for this rescue report?`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setUpdatingId(report._id);
+      setMessage("");
+      setError("");
+      await API.patch(`/rescues/${report._id}`, {
+        donationStatus: "Collected",
+      });
+      setMessage("Rescue donation recorded as collected.");
+      await loadReports();
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Unable to record donation collection."
+      );
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   const assigned = reports.filter((r) => r.assignedRescuer);
   const inProgress = reports.filter((r) => r.status === "In Progress");
   const resolved = reports.filter((r) => r.status === "Resolved");
@@ -194,6 +221,25 @@ export default function RescuerDashboard() {
                   <strong>Reported by:</strong>{" "}
                   {report.reporter?.name || "Unknown"}
                 </p>
+
+                {Number(report.donationAmount) > 0 && (
+                  <div className="alert alert-light border">
+                    <strong>Cash donation pledge:</strong>{" "}
+                    ₹{Number(report.donationAmount).toLocaleString("en-IN")}
+                    <span className="ms-2">· {report.donationStatus}</span>
+                    {report.donationStatus === "Pledged" && (
+                      <button
+                        className="btn btn-sm btn-outline-success d-block mt-2"
+                        disabled={updatingId !== null}
+                        onClick={() => collectDonation(report)}
+                      >
+                        {updatingId === report._id
+                          ? "Recording..."
+                          : "Confirm cash collected"}
+                      </button>
+                    )}
+                  </div>
+                )}
 
                 {report.status === "Assigned" ||
                 report.status === "In Progress" ? (

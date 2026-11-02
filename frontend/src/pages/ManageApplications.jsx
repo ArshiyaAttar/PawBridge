@@ -24,6 +24,7 @@ export default function ManageApplications() {
   const [activeFilter, setActiveFilter] = useState("All");
   const [search, setSearch] = useState("");
   const [notes, setNotes] = useState({});
+  const [deliveryDecisions, setDeliveryDecisions] = useState({});
 
   const loadApplications = useCallback(async () => {
     try {
@@ -49,6 +50,15 @@ export default function ManageApplications() {
 
     if (!application) return;
 
+    if (
+      status === "Approved" &&
+      application.homeDeliveryRequested &&
+      !deliveryDecisions[id]
+    ) {
+      setError("Choose whether the requested home delivery can be provided.");
+      return;
+    }
+
     const confirmed = window.confirm(
       `Are you sure you want to mark this application as ${status}?`
     );
@@ -63,6 +73,9 @@ export default function ManageApplications() {
       const { data } = await API.patch(`/adoptions/${id}/review`, {
         status,
         shelterNotes: notes[id] || "",
+        ...(status === "Approved" && application.homeDeliveryRequested
+          ? { deliveryDecision: deliveryDecisions[id] }
+          : {}),
       });
 
       setMessage(`Application successfully marked as ${status}.`);
@@ -75,6 +88,31 @@ export default function ManageApplications() {
     } catch (err) {
       setError(
         err.response?.data?.message || "Unable to update this application."
+      );
+    } finally {
+      setReviewingId(null);
+    }
+  };
+
+  const collectPayment = async (application) => {
+    if (
+      !window.confirm(
+        `Confirm that ₹${Number(application.adoptionFee).toLocaleString("en-IN")} was received in cash at handoff?`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setReviewingId(application._id);
+      setMessage("");
+      setError("");
+      await API.patch(`/adoptions/${application._id}/payment`);
+      setMessage("COD adoption fee recorded as collected.");
+      await loadApplications();
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Unable to record the COD payment."
       );
     } finally {
       setReviewingId(null);
@@ -294,8 +332,24 @@ export default function ManageApplications() {
                   </p>
                   <p className="mb-3">
                     <strong>Phone:</strong>{" "}
-                    {application.applicant?.phone || "Not provided"}
+                    {application.applicantPhone ||
+                      application.applicant?.phone ||
+                      "Not provided"}
                   </p>
+
+                  <div className="alert alert-light border">
+                    <p className="mb-1">
+                      <strong>Adoption fee:</strong>{" "}
+                      ₹{Number(application.adoptionFee || 0).toLocaleString("en-IN")}
+                    </p>
+                    <p className="mb-1">
+                      <strong>Payment:</strong> COD · {application.paymentStatus || "Not Required"}
+                    </p>
+                    <strong>Home delivery:</strong>{" "}
+                    {application.homeDeliveryRequested
+                      ? `${application.deliveryStatus} — ${application.deliveryAddress}`
+                      : "Not requested"}
+                  </div>
 
                   <h6>Why they want to adopt</h6>
                   <p className="paw-muted">
@@ -312,6 +366,19 @@ export default function ManageApplications() {
                     {application.livingSituation || "Not provided"}
                   </p>
 
+                  <h6>Pet-care plan</h6>
+                  <p className="paw-muted">
+                    {application.carePlan || "Not provided"}
+                  </p>
+                  <p className="mb-2">
+                    <strong>Household consent:</strong>{" "}
+                    {application.householdConsent ? "Confirmed" : "Not recorded"}
+                  </p>
+                  <p className="mb-3">
+                    <strong>Veterinarian reference:</strong>{" "}
+                    {application.vetReference || "Not provided"}
+                  </p>
+
                   {application.shelterNotes && (
                     <div className="alert alert-light border">
                       <strong>Shelter notes:</strong>
@@ -321,6 +388,36 @@ export default function ManageApplications() {
 
                   {isReviewable && (
                     <div className="mt-3">
+                      {application.homeDeliveryRequested && (
+                        <div className="mb-3">
+                          <label
+                            className="form-label fw-semibold"
+                            htmlFor={`delivery-decision-${application._id}`}
+                          >
+                            Home delivery decision *
+                          </label>
+                          <select
+                            id={`delivery-decision-${application._id}`}
+                            className="form-select"
+                            value={deliveryDecisions[application._id] || ""}
+                            onChange={(e) =>
+                              setDeliveryDecisions((previous) => ({
+                                ...previous,
+                                [application._id]: e.target.value,
+                              }))
+                            }
+                          >
+                            <option value="">Select a decision...</option>
+                            <option value="Approved">
+                              Approve delivery (confirm cost with adopter)
+                            </option>
+                            <option value="Unavailable">
+                              Delivery unavailable; pickup only
+                            </option>
+                          </select>
+                        </div>
+                      )}
+
                       <label className="form-label fw-semibold">
                         Notes for applicant
                       </label>
@@ -372,6 +469,20 @@ export default function ManageApplications() {
                       </div>
                     </div>
                   )}
+
+                  {application.status === "Approved" &&
+                    Number(application.adoptionFee) > 0 &&
+                    application.paymentStatus === "Pending" && (
+                      <button
+                        className="btn btn-outline-success mt-3"
+                        disabled={reviewingId !== null}
+                        onClick={() => collectPayment(application)}
+                      >
+                        {reviewingId === application._id
+                          ? "Recording..."
+                          : "Confirm COD received at handoff"}
+                      </button>
+                    )}
                 </div>
               </div>
             );

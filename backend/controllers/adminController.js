@@ -11,6 +11,7 @@ export const getDashboardStats = async (req, res) => {
       shelters,
       rescuers,
       totalPets,
+      pendingPetListings,
       availablePets,
       adoptedPets,
       totalApplications,
@@ -23,7 +24,15 @@ export const getDashboardStats = async (req, res) => {
       User.countDocuments({ role: "shelter" }),
       User.countDocuments({ role: "rescuer" }),
       Pet.countDocuments({ isActive: true }),
-      Pet.countDocuments({ isActive: true, status: "Available" }),
+      Pet.countDocuments({ isActive: true, listingApprovalStatus: "Pending" }),
+      Pet.countDocuments({
+        isActive: true,
+        status: "Available",
+        $or: [
+          { listingApprovalStatus: "Approved" },
+          { listingApprovalStatus: { $exists: false } },
+        ],
+      }),
       Pet.countDocuments({ isActive: true, status: "Adopted" }),
       AdoptionApplication.countDocuments(),
       AdoptionApplication.countDocuments({ status: "Pending" }),
@@ -39,6 +48,7 @@ export const getDashboardStats = async (req, res) => {
         shelters,
         rescuers,
         totalPets,
+        pendingPetListings,
         availablePets,
         adoptedPets,
         totalApplications,
@@ -49,6 +59,111 @@ export const getDashboardStats = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ success: false, message: "Unable to load dashboard statistics" });
+  }
+};
+
+export const getPendingPetListings = async (_req, res) => {
+  try {
+    const pets = await Pet.find({
+      isActive: true,
+      listingApprovalStatus: "Pending",
+    })
+      .select("+listingContactPhone")
+      .populate("shelter", "name email phone")
+      .sort({ createdAt: 1 });
+
+    return res.json({ success: true, count: pets.length, pets });
+  } catch {
+    return res.status(500).json({
+      success: false,
+      message: "Unable to fetch pet listing requests",
+    });
+  }
+};
+
+export const reviewPetListing = async (req, res) => {
+  try {
+    const { status, notes } = req.body;
+    if (!["Approved", "Rejected"].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Choose Approved or Rejected",
+      });
+    }
+
+    if (notes !== undefined && (typeof notes !== "string" || notes.length > 1000)) {
+      return res.status(400).json({
+        success: false,
+        message: "Review notes must be 1000 characters or fewer",
+      });
+    }
+
+    const pet = await Pet.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        isActive: true,
+        listingApprovalStatus: "Pending",
+      },
+      {
+        $set: {
+          listingApprovalStatus: status,
+          listingReviewNotes: notes?.trim() || "",
+          listingReviewedBy: req.user._id,
+          listingReviewedAt: new Date(),
+        },
+      },
+      { new: true, runValidators: true }
+    ).populate("shelter", "name email phone");
+
+    if (!pet) {
+      return res.status(404).json({
+        success: false,
+        message: "Pending pet listing not found",
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: status === "Approved"
+        ? "Pet listing approved and published"
+        : "Pet listing rejected",
+      pet,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message || "Unable to review pet listing",
+    });
+  }
+};
+
+export const getPendingPetListingPhoto = async (req, res) => {
+  try {
+    const pet = await Pet.findOne({
+      _id: req.params.id,
+      isActive: true,
+      listingApprovalStatus: "Pending",
+      hasPhoto: true,
+    }).select("+photoData +photoContentType");
+
+    if (!pet?.photoData || !pet.photoContentType) {
+      return res.status(404).json({
+        success: false,
+        message: "Pet listing photo not found",
+      });
+    }
+
+    res.set("Content-Type", pet.photoContentType);
+    res.set("Cache-Control", "private, no-store");
+    return res.send(pet.photoData);
+  } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(400).json({ success: false, message: "Invalid pet ID" });
+    }
+    return res.status(500).json({
+      success: false,
+      message: "Unable to fetch pet listing photo",
+    });
   }
 };
 

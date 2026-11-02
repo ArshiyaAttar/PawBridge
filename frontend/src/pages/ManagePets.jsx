@@ -1,17 +1,19 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import API from "../services/api";
 
 export default function ManagePets() {
+  const location = useLocation();
   const [pets, setPets] = useState([]);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(location.state?.message || "");
+  const [error, setError] = useState("");
 
   const load = async () => {
     try {
       const { data } = await API.get("/pets/mine");
       setPets(data.pets || []);
     } catch (err) {
-      setMessage(err.response?.data?.message || "Unable to load pets.");
+      setError(err.response?.data?.message || "Unable to load pets.");
     }
   };
 
@@ -34,14 +36,15 @@ export default function ManagePets() {
   return (
     <main className="container paw-section">
       <h1 className="section-title">
-        Manage <span>pets</span>
+        My <span>pet listings</span>
       </h1>
 
-      <Link to="/shelter/add-pet" className="btn paw-primary mb-4">
+      <Link to="/list-pet" className="btn paw-primary mb-4">
         + Add pet
       </Link>
 
       {message && <div className="alert alert-info">{message}</div>}
+      {error && <div className="alert alert-danger">{error}</div>}
 
       <div className="table-responsive">
         <table className="table align-middle">
@@ -50,7 +53,8 @@ export default function ManagePets() {
               <th>Pet</th>
               <th>Species</th>
               <th>Location</th>
-              <th>Status</th>
+              <th>Listing review</th>
+              <th>Pet status</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -58,7 +62,7 @@ export default function ManagePets() {
           <tbody>
             {pets.length === 0 ? (
               <tr>
-                <td colSpan="5" className="text-center py-4">
+                <td colSpan="6" className="text-center py-4">
                   No pet listings found.
                 </td>
               </tr>
@@ -68,12 +72,26 @@ export default function ManagePets() {
                   <td>{pet.name}</td>
                   <td>{pet.species}</td>
                   <td>{pet.location}</td>
+                  <td>
+                    <span className={`badge ${
+                      pet.listingApprovalStatus === "Approved"
+                        ? "text-bg-success"
+                        : pet.listingApprovalStatus === "Rejected"
+                        ? "text-bg-danger"
+                        : "text-bg-warning"
+                    }`}>
+                      {pet.listingApprovalStatus || "Approved"}
+                    </span>
+                    {pet.listingReviewNotes && (
+                      <div className="small text-muted mt-1">{pet.listingReviewNotes}</div>
+                    )}
+                  </td>
                   <td>{pet.status}</td>
                   <td>
                     <div className="d-flex gap-2">
                       <Link
                         className="btn btn-sm btn-outline-success"
-                        to={`/shelter/pets/${pet._id}/edit`}
+                        to={`/my-listings/${pet._id}/edit`}
                       >
                         Edit
                       </Link>

@@ -164,6 +164,20 @@ export default function MyApplications() {
 
                 <hr />
 
+                <p className="mb-1">
+                  <strong>Adoption fee:</strong>{" "}
+                  ₹{Number(app.adoptionFee || 0).toLocaleString("en-IN")}
+                </p>
+                <p className="mb-1">
+                  <strong>Payment:</strong> COD · {app.paymentStatus || "Not Required"}
+                </p>
+                <p className="mb-3">
+                  <strong>Home delivery:</strong>{" "}
+                  {app.homeDeliveryRequested
+                    ? app.deliveryStatus || "Pending Review"
+                    : "Not requested"}
+                </p>
+
                 <p className="fw-semibold mb-2">My reason for adoption</p>
                 <p className="paw-muted">
                   {app.reason || "No reason provided."}

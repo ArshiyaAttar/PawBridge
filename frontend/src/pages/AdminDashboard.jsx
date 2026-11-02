@@ -44,6 +44,11 @@ export default function AdminDashboard() {
         { label: "Shelters", value: stats.shelters, icon: Heart },
         { label: "Rescuers", value: stats.rescuers, icon: HeartHandshake },
         { label: "Total pets", value: stats.totalPets, icon: PawPrint },
+        {
+          label: "Pending pet listings",
+          value: stats.pendingPetListings,
+          icon: ClipboardList,
+        },
         { label: "Available pets", value: stats.availablePets, icon: PawPrint },
         { label: "Adopted pets", value: stats.adoptedPets, icon: Heart },
         {
@@ -70,6 +75,12 @@ export default function AdminDashboard() {
     : [];
 
   const shortcuts = [
+    {
+      title: "Pet listing requests",
+      description: "Review community-submitted listings before they are published.",
+      link: "/admin/pet-listings",
+      icon: PawPrint,
+    },
     {
       title: "Manage users",
       description: "View users, change roles and manage account access.",

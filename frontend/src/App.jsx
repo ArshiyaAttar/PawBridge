@@ -28,6 +28,7 @@ const ChangePassword = lazy(() => import("./pages/ChangePassword"));
 const EditPet = lazy(() => import("./pages/EditPet"));
 const AdminRescues = lazy(() => import("./pages/AdminRescues"));
 const ApplicationDetails = lazy(() => import("./pages/ApplicationDetails"));
+const AdminPetListings = lazy(() => import("./pages/AdminPetListings"));
 
 function PageLoader() {
   return (
@@ -63,14 +64,18 @@ function App() {
                 <Route path="/my-rescues" element={<ProtectedRoute><MyRescues /></ProtectedRoute>} />
 
                 <Route path="/shelter" element={<ProtectedRoute roles={["shelter", "admin"]}><ShelterDashboard /></ProtectedRoute>} />
-                <Route path="/shelter/add-pet" element={<ProtectedRoute roles={["shelter", "admin"]}><AddPet /></ProtectedRoute>} />
+                <Route path="/list-pet" element={<ProtectedRoute><AddPet /></ProtectedRoute>} />
+                <Route path="/shelter/add-pet" element={<ProtectedRoute><AddPet /></ProtectedRoute>} />
+                <Route path="/my-listings" element={<ProtectedRoute><ManagePets /></ProtectedRoute>} />
+                <Route path="/my-listings/:id/edit" element={<ProtectedRoute><EditPet /></ProtectedRoute>} />
                 <Route path="/shelter/pets" element={<ProtectedRoute roles={["shelter", "admin"]}><ManagePets /></ProtectedRoute>} />
-                <Route path="/shelter/pets/:id/edit" element={<ProtectedRoute roles={["shelter", "admin"]}><EditPet /></ProtectedRoute>} />
+                <Route path="/shelter/pets/:id/edit" element={<ProtectedRoute><EditPet /></ProtectedRoute>} />
                 <Route path="/shelter/applications" element={<ProtectedRoute roles={["shelter", "admin"]}><ManageApplications /></ProtectedRoute>} />
 
                 <Route path="/rescuer" element={<ProtectedRoute roles={["rescuer", "admin"]}><RescuerDashboard /></ProtectedRoute>} />
                 <Route path="/admin" element={<ProtectedRoute roles={["admin"]}><AdminDashboard /></ProtectedRoute>} />
                 <Route path="/admin/users" element={<ProtectedRoute roles={["admin"]}><AdminUsers /></ProtectedRoute>} />
+                <Route path="/admin/pet-listings" element={<ProtectedRoute roles={["admin"]}><AdminPetListings /></ProtectedRoute>} />
                 <Route path="/admin/rescues" element={<ProtectedRoute roles={["admin"]}><AdminRescues /></ProtectedRoute>} />
                 <Route path="*" element={<main className="container paw-section"><h2>Page not found</h2></main>} />
               </Routes>

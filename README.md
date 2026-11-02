@@ -62,6 +62,8 @@ PawBridge/
 ### Shelters
 
 - Add, edit, and deactivate pet listings
+- Upload pet photos directly with listings (JPEG, PNG, or WebP; up to 5 MB), stored in MongoDB
+- Allow signed-in community members to request pet listings; admins approve listings before publication
 - Review adoption applications for their own pets
 - Approve, reject, or place applications under review
 - Communicate with prospective adopters

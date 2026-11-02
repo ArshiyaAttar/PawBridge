@@ -131,7 +131,12 @@ test("adoption submission persists first, then emails admin and adopter once", a
   await applyForAdoption(
     {
       params: { petId: "pet-1" },
-      body: { reason: "I can offer a safe and caring home." },
+      body: {
+        reason: "I can offer a safe and caring home.",
+        applicantPhone: "1234567890",
+        householdConsent: true,
+        carePlan: "I will provide daily exercise, vet checkups, and safe shelter.",
+      },
       user: { _id: "adopter-1", name: "Alex", email: "adopter@example.test" },
     },
     res
@@ -205,7 +210,12 @@ test("email failures do not undo saved adoption or rescue submissions", async (t
   await applyForAdoption(
     {
       params: { petId: "pet-1" },
-      body: { reason: "I can offer a safe and caring home." },
+      body: {
+        reason: "I can offer a safe and caring home.",
+        applicantPhone: "1234567890",
+        householdConsent: true,
+        carePlan: "I will provide daily exercise, vet checkups, and safe shelter.",
+      },
       user: { _id: "adopter-1", name: "Alex", email: "adopter@example.test" },
     },
     adoptionResponse

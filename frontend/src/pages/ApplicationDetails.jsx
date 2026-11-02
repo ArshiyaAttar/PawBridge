@@ -11,6 +11,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import API from "../services/api";
+import { getPetImageSrc } from "../services/petImages";
 
 const statusStyles = {
   Pending: "text-bg-warning",
@@ -159,6 +160,30 @@ export default function ApplicationDetails() {
               <h5 className="mb-0">Your adoption information</h5>
             </div>
 
+            <p>
+              <strong>Adoption fee:</strong>{" "}
+              ₹{Number(application.adoptionFee || 0).toLocaleString("en-IN")}
+            </p>
+            <p>
+              <strong>Payment method/status:</strong>{" "}
+              COD · {application.paymentStatus || "Not Required"}
+            </p>
+            <p>
+              <strong>Contact phone:</strong>{" "}
+              {application.applicantPhone || applicant?.phone || "Not provided"}
+            </p>
+            <p>
+              <strong>Home delivery:</strong>{" "}
+              {application.homeDeliveryRequested
+                ? application.deliveryStatus || "Pending Review"
+                : "Not requested"}
+            </p>
+            {application.homeDeliveryRequested && (
+              <p>
+                <strong>Requested address:</strong> {application.deliveryAddress}
+              </p>
+            )}
+
             <h6>Reason for adoption</h6>
             <p className="paw-muted">
               {application.reason || "Not provided"}
@@ -172,6 +197,18 @@ export default function ApplicationDetails() {
             <h6>Living situation</h6>
             <p className="paw-muted mb-0">
               {application.livingSituation || "Not provided"}
+            </p>
+            <h6>Pet-care plan</h6>
+            <p className="paw-muted">
+              {application.carePlan || "Not provided"}
+            </p>
+            <h6>Household consent</h6>
+            <p className="paw-muted">
+              {application.householdConsent ? "Confirmed" : "Not recorded"}
+            </p>
+            <h6>Veterinarian reference</h6>
+            <p className="paw-muted mb-0">
+              {application.vetReference || "Not provided"}
             </p>
           </div>
 
@@ -200,9 +237,9 @@ export default function ApplicationDetails() {
 
             {pet ? (
               <>
-                {pet.image && (
+                {getPetImageSrc(pet) && (
                   <img
-                    src={pet.image}
+                    src={getPetImageSrc(pet)}
                     alt={pet.name}
                     className="img-fluid rounded-3 mb-3 w-100"
                     style={{ maxHeight: 230, objectFit: "cover" }}

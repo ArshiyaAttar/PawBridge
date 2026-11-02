@@ -10,10 +10,81 @@ import { sendEmailNotifications } from "../services/emailService.js";
 
 export const applyForAdoption = async (req, res) => {
   try {
-    const { reason, experience, livingSituation } = req.body;
+    const {
+      reason,
+      experience,
+      livingSituation,
+      homeDeliveryRequested,
+      householdConsent,
+      carePlan,
+      vetReference,
+      applicantPhone,
+    } = req.body;
 
-    if (!reason || reason.trim().length < 10) {
+    if (typeof reason !== "string" || reason.trim().length < 10) {
       return res.status(400).json({ success: false, message: "Please provide an adoption reason of at least 10 characters" });
+    }
+
+    if (
+      homeDeliveryRequested !== undefined &&
+      typeof homeDeliveryRequested !== "boolean"
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid home delivery selection",
+      });
+    }
+
+    if (
+      typeof applicantPhone !== "string" ||
+      !/^[+]?[\d\s()-]{7,20}$/.test(applicantPhone.trim())
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid contact phone number",
+      });
+    }
+
+    if (householdConsent !== true) {
+      return res.status(400).json({
+        success: false,
+        message: "Confirm that your household agrees to the adoption",
+      });
+    }
+
+    if (
+      typeof carePlan !== "string" ||
+      carePlan.trim().length < 20 ||
+      carePlan.trim().length > 2000
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Please describe your pet-care plan in 20 to 2000 characters",
+      });
+    }
+
+    if (
+      vetReference !== undefined &&
+      (typeof vetReference !== "string" || vetReference.trim().length > 200)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Vet reference must be 200 characters or fewer",
+      });
+    }
+
+    const deliveryAddress =
+      typeof req.body.deliveryAddress === "string"
+        ? req.body.deliveryAddress.trim()
+        : "";
+    if (
+      homeDeliveryRequested === true &&
+      (deliveryAddress.length < 10 || deliveryAddress.length > 500)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a delivery address between 10 and 500 characters",
+      });
     }
 
     const pet = await Pet.findById(req.params.petId);
@@ -26,18 +97,32 @@ export const applyForAdoption = async (req, res) => {
       pet: pet._id,
       applicant: req.user._id,
       reason,
+      applicantPhone: applicantPhone.trim(),
       experience,
-      livingSituation
+      livingSituation,
+      householdConsent,
+      carePlan: carePlan.trim(),
+      vetReference: vetReference?.trim() || "",
+      homeDeliveryRequested: homeDeliveryRequested === true,
+      deliveryAddress: homeDeliveryRequested === true ? deliveryAddress : "",
+      deliveryStatus: homeDeliveryRequested === true ? "Pending Review" : "Not Requested",
+      adoptionFee: pet.adoptionFee || 0,
+      paymentMethod: "COD",
+      paymentStatus: pet.adoptionFee > 0 ? "Pending" : "Not Required",
     });
 
     const applicationDetails = [
       { label: "Applicant", value: req.user.name },
       { label: "Applicant email", value: req.user.email },
+      { label: "Applicant phone", value: applicantPhone.trim() },
       { label: "Pet", value: `${pet.name} (${pet.species})` },
       { label: "Application ID", value: application._id },
       { label: "Reason", value: reason },
       { label: "Previous experience", value: experience || "Not provided" },
       { label: "Living situation", value: livingSituation || "Not provided" },
+      { label: "Household consent", value: "Confirmed" },
+      { label: "Pet-care plan", value: carePlan.trim() },
+      { label: "Vet reference", value: vetReference?.trim() || "Not provided" },
     ];
     const adminEmail = buildSubmissionEmail({
       kind: "adoption",
@@ -49,6 +134,7 @@ export const applyForAdoption = async (req, res) => {
       details: [
         { label: "Pet", value: pet.name },
         { label: "Application ID", value: application._id },
+        { label: "Contact phone", value: applicantPhone.trim() },
       ],
     });
     const emailResults = await sendEmailNotifications([
@@ -126,7 +212,7 @@ export const reviewApplication = async (req, res) => {
   let autoRejectedApplications = [];
 
   try {
-    const { status, shelterNotes } = req.body;
+    const { status, shelterNotes, deliveryDecision } = req.body;
 
     const allowedStatuses = ["Under Review", "Approved", "Rejected"];
 
@@ -176,6 +262,28 @@ export const reviewApplication = async (req, res) => {
           "This application has already been finalized"
         );
         error.statusCode = 409;
+        throw error;
+      }
+
+      if (status === "Approved" && application.homeDeliveryRequested) {
+        if (!["Approved", "Unavailable"].includes(deliveryDecision)) {
+          const error = new Error(
+            "Choose whether home delivery is available before approving this application"
+          );
+          error.statusCode = 400;
+          throw error;
+        }
+        application.deliveryStatus = deliveryDecision;
+      } else if (status === "Rejected" && application.homeDeliveryRequested) {
+        application.deliveryStatus = "Unavailable";
+      } else if (
+        deliveryDecision !== undefined &&
+        !application.homeDeliveryRequested
+      ) {
+        const error = new Error(
+          "Home delivery was not requested for this application"
+        );
+        error.statusCode = 400;
         throw error;
       }
 
@@ -303,6 +411,85 @@ export const reviewApplication = async (req, res) => {
   }
 };
 
+export const collectAdoptionPayment = async (req, res) => {
+  try {
+    const application = await AdoptionApplication.findById(req.params.id)
+      .populate("pet");
+
+    if (!application) {
+      return res.status(404).json({
+        success: false,
+        message: "Application not found",
+      });
+    }
+
+    if (
+      req.user.role !== "admin" &&
+      application.pet?.shelter?.toString() !== req.user._id.toString()
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to record this adoption payment",
+      });
+    }
+
+    if (application.status !== "Approved") {
+      return res.status(409).json({
+        success: false,
+        message: "Only approved applications can have COD collected",
+      });
+    }
+
+    if (application.adoptionFee <= 0) {
+      return res.status(409).json({
+        success: false,
+        message: "No adoption fee is due for this application",
+      });
+    }
+
+    if (application.paymentStatus !== "Pending") {
+      return res.status(409).json({
+        success: false,
+        message: "There is no outstanding adoption fee to collect",
+      });
+    }
+
+    const updatedApplication = await AdoptionApplication.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        status: "Approved",
+        adoptionFee: { $gt: 0 },
+        paymentStatus: "Pending",
+      },
+      {
+        $set: {
+          paymentStatus: "Paid",
+          paymentCollectedAt: new Date(),
+          paymentCollectedBy: req.user._id,
+        },
+      },
+      { new: true }
+    );
+
+    if (!updatedApplication) {
+      return res.status(409).json({
+        success: false,
+        message: "The adoption fee is no longer outstanding",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "COD adoption fee recorded as collected",
+      application: updatedApplication,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message || "Unable to record adoption payment",
+    });
+  }
+};
 
 export const getApplicationById = async (req, res) => {
   try {

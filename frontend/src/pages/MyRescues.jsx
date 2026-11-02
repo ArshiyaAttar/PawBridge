@@ -180,6 +180,19 @@ export default function MyRescues() {
                   {report.contactPhone}
                 </p>
 
+                {Number(report.donationAmount) > 0 && (
+                  <div className="alert alert-light border mt-3 mb-2">
+                    <strong>Rescue donation pledge:</strong>{" "}
+                    ₹{Number(report.donationAmount).toLocaleString("en-IN")}
+                    <div>
+                      <strong>Status:</strong> {report.donationStatus}
+                    </div>
+                    <small className="paw-muted">
+                      This is a cash pledge, not an online payment.
+                    </small>
+                  </div>
+                )}
+
                 {report.assignedRescuer && (
                   <div className="alert alert-light border mt-3 mb-2">
                     <strong>Assigned rescuer:</strong>{" "}

@@ -9,6 +9,7 @@ import {
   VenusAndMars,
 } from "lucide-react";
 import API from "../services/api";
+import { getPetImageSrc } from "../services/petImages";
 
 const fallbackImage =
   "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=700";
@@ -204,7 +205,7 @@ export default function Pets() {
               <article className="pet-card h-100">
                 <div className="pet-card-image-wrap">
                   <img
-                    src={pet.image || fallbackImages[pet.species] || fallbackImage}
+                    src={getPetImageSrc(pet) || fallbackImages[pet.species] || fallbackImage}
                     alt={`${pet.name}, ${pet.species}`}
                     onError={(e) => {
                       e.currentTarget.onerror = null;
@@ -230,6 +231,11 @@ export default function Pets() {
                   <div className="pet-fact-list mb-3">
                     <span><VenusAndMars size={15} /> {pet.gender || "Unknown"}</span>
                     <span><MapPin size={15} /> {pet.location}</span>
+                    <span>
+                      {Number(pet.adoptionFee || 0) > 0
+                        ? `Adoption fee: ₹${Number(pet.adoptionFee).toLocaleString("en-IN")} · COD`
+                        : "No adoption fee"}
+                    </span>
                     <span>
                       <CheckCircle2 size={15} />
                       {pet.vaccinated ? "Vaccinated" : "Vaccination unconfirmed"}

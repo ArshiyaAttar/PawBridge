@@ -9,10 +9,16 @@ dotenv.config();
 
 const demoUsers = [
   { key: "admin", name: "PawBridge Admin", email: "admin@pawbridge.demo", role: "admin" },
-  { key: "adopter", name: "Demo Adopter", email: "adopter@pawbridge.demo", role: "adopter" },
-  { key: "shelter", name: "Hope Paws Shelter", email: "shelter@pawbridge.demo", role: "shelter" },
-  { key: "rescuer", name: "Demo Rescuer", email: "rescuer@pawbridge.demo", role: "rescuer" },
+  { key: "adopter", name: "Demo Adopter", email: "pawbridge.demo.adopter@gmail.com", role: "adopter" },
+  { key: "shelter", name: "Hope Paws Shelter", email: "pawbridge.demo.shelter@gmail.com", role: "shelter" },
+  { key: "rescuer", name: "Demo Rescuer", email: "pawbridge.demo.rescuer@gmail.com", role: "rescuer" },
 ];
+
+const legacyDemoEmails = {
+  adopter: "adopter@pawbridge.demo",
+  shelter: "shelter@pawbridge.demo",
+  rescuer: "rescuer@pawbridge.demo",
+};
 
 const demoPets = [
   { key: "luna", name: "Luna", species: "Dog", category: "Adult Dog", breed: "Indie mix", age: 2, gender: "Female", location: "Pune", healthStatus: "Healthy and playful", vaccinated: true, status: "Available", description: "Luna is a gentle, people-loving dog who enjoys walks and cuddles.", image: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=700" },
@@ -45,10 +51,28 @@ const requireDemoConfig = () => {
   }
 };
 
-const getOrCreateUser = async ({ name, email, role }) => {
+const getOrCreateUser = async ({ key, name, email, role }) => {
   const normalizedEmail = email.toLowerCase();
   const existing = await User.findOne({ email: normalizedEmail });
-  if (existing) return existing;
+  if (existing) {
+    if (existing.role !== role || existing.name !== name) {
+      throw new Error(`Demo email ${normalizedEmail} already belongs to a different account.`);
+    }
+    return existing;
+  }
+
+  const legacyEmail = legacyDemoEmails[key];
+  if (legacyEmail) {
+    const legacyUser = await User.findOne({ email: legacyEmail });
+    if (legacyUser) {
+      if (legacyUser.role !== role) {
+        throw new Error(`Legacy demo account ${legacyEmail} has an unexpected role.`);
+      }
+      legacyUser.email = normalizedEmail;
+      await legacyUser.save();
+      return legacyUser;
+    }
+  }
 
   const password = await bcrypt.hash(process.env.DEMO_PASSWORD, 12);
   return User.create({ name, email: normalizedEmail, password, role, isActive: true });
@@ -60,6 +84,10 @@ const getOrCreatePet = async (pet, shelterId) => {
     const updates = {};
     if (!existing.image && pet.image) updates.image = pet.image;
     if (!existing.category) updates.category = pet.category;
+    if (!existing.listingContactPhone) updates.listingContactPhone = "555-0100";
+    if (!existing.listingApprovalStatus) {
+      updates.listingApprovalStatus = "Approved";
+    }
     if (Object.keys(updates).length) {
       Object.assign(existing, updates);
       await existing.save();
@@ -67,7 +95,14 @@ const getOrCreatePet = async (pet, shelterId) => {
     return existing;
   }
 
-  return Pet.create({ ...pet, demoKey: `demo-${pet.key}`, shelter: shelterId, isActive: true });
+  return Pet.create({
+    ...pet,
+    listingContactPhone: "555-0100",
+    listingApprovalStatus: "Approved",
+    demoKey: `demo-${pet.key}`,
+    shelter: shelterId,
+    isActive: true,
+  });
 };
 
 const createApplicationIfMissing = async ({ pet, applicant, reviewer, status, reason, shelterNotes }) => {

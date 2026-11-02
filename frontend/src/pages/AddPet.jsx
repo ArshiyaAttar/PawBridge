@@ -1,8 +1,9 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ImagePlus, PawPrint } from "lucide-react";
 import API from "../services/api";
+import { createPetFormData } from "../services/petImages";
 
 const initialForm = {
   name: "",
@@ -12,10 +13,12 @@ const initialForm = {
   age: 1,
   gender: "Unknown",
   description: "",
-  image: "",
+  photo: null,
   location: "",
+  listingContactPhone: "",
   healthStatus: "Not specified",
   vaccinated: false,
+  adoptionFee: 0,
 };
 
 const fallbackImage =
@@ -27,6 +30,18 @@ export default function AddPet() {
   const [form, setForm] = useState(initialForm);
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState("");
+
+  useEffect(() => {
+    if (!form.photo) {
+      setPhotoPreview("");
+      return undefined;
+    }
+
+    const previewUrl = URL.createObjectURL(form.photo);
+    setPhotoPreview(previewUrl);
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [form.photo]);
 
   const field = (key, value) => {
     setForm((previous) => ({ ...previous, [key]: value }));
@@ -46,20 +61,39 @@ export default function AddPet() {
       return;
     }
 
+    if (
+      !Number.isInteger(Number(form.adoptionFee)) ||
+      Number(form.adoptionFee) < 0 ||
+      Number(form.adoptionFee) > 1000000
+    ) {
+      setMessage("Adoption fee must be a whole amount between ₹0 and ₹1,000,000.");
+      return;
+    }
+
+    if (!form.photo) {
+      setMessage("Please upload a photo of the pet.");
+      return;
+    }
+
     try {
       setSubmitting(true);
 
-      await API.post("/pets", {
-        ...form,
-        name: form.name.trim(),
-        breed: form.breed.trim(),
-        description: form.description.trim(),
-        location: form.location.trim(),
-        age: Number(form.age),
-      });
+      await API.post(
+        "/pets",
+        createPetFormData({
+          ...form,
+          name: form.name.trim(),
+          breed: form.breed.trim(),
+          description: form.description.trim(),
+          location: form.location.trim(),
+          age: Number(form.age),
+          adoptionFee: Number(form.adoptionFee),
+        }),
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
 
-      navigate("/shelter/pets", {
-        state: { message: "Pet listing created successfully." },
+      navigate("/my-listings", {
+        state: { message: "Listing submitted. It will appear publicly after admin approval." },
       });
     } catch (err) {
       setMessage(
@@ -176,6 +210,43 @@ export default function AddPet() {
               />
             </div>
 
+            <div className="col-md-6 mb-3">
+              <label className="form-label" htmlFor="listing-contact-phone">
+                Your contact phone *
+              </label>
+              <input
+                id="listing-contact-phone"
+                className="form-control"
+                type="tel"
+                required
+                minLength={7}
+                maxLength={20}
+                pattern="[+]?[0-9 ()-]{7,20}"
+                value={form.listingContactPhone}
+                onChange={(e) => field("listingContactPhone", e.target.value)}
+                placeholder="Phone number for admin verification"
+              />
+              <small className="paw-muted">
+                Shared with admins for review; your listing is hidden until approval.
+              </small>
+            </div>
+
+            <div className="col-md-6 mb-3">
+              <label className="form-label">Adoption fee (₹)</label>
+              <input
+                className="form-control"
+                type="number"
+                min="0"
+                max="1000000"
+                step="1"
+                value={form.adoptionFee}
+                onChange={(e) => field("adoptionFee", e.target.value)}
+              />
+              <small className="paw-muted">
+                Set 0 for no fee. Approved adoption fees are collected in cash at handoff.
+              </small>
+            </div>
+
             <div className="col-12 mb-3">
               <label className="form-label">Description *</label>
               <textarea
@@ -191,24 +262,25 @@ export default function AddPet() {
             </div>
 
             <div className="col-12 mb-3">
-              <label className="form-label">
-                <ImagePlus size={17} /> Pet image URL
+              <label className="form-label" htmlFor="pet-photo">
+                <ImagePlus size={17} /> Pet photo *
               </label>
               <input
+                id="pet-photo"
                 className="form-control"
-                type="url"
-                value={form.image}
-                onChange={(e) => field("image", e.target.value)}
-                placeholder="https://example.com/pet-image.jpg"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                required
+                onChange={(e) => field("photo", e.target.files?.[0] || null)}
               />
               <small className="paw-muted">
-                Paste a publicly accessible image URL.
+                Upload a JPEG, PNG, or WebP image up to 5 MB.
               </small>
             </div>
 
             <div className="col-12 mb-3">
               <img
-                src={form.image || fallbackImage}
+                src={photoPreview || fallbackImage}
                 alt="Pet preview"
                 onError={(e) => {
                   e.currentTarget.onerror = null;

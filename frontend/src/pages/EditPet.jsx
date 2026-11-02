@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, ImagePlus } from "lucide-react";
 import API from "../services/api";
+import { createPetFormData, getPetImageSrc } from "../services/petImages";
 
 const fallbackImage =
   "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=700";
@@ -15,13 +16,25 @@ export default function EditPet() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState("");
+
+  useEffect(() => {
+    if (!form?.photo) {
+      setPhotoPreview("");
+      return undefined;
+    }
+
+    const previewUrl = URL.createObjectURL(form.photo);
+    setPhotoPreview(previewUrl);
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [form?.photo]);
 
   useEffect(() => {
     let active = true;
 
     const loadPet = async () => {
       try {
-        const { data } = await API.get(`/pets/${id}`);
+        const { data } = await API.get(`/pets/mine/${id}`);
         const pet = data.pet;
 
         if (active) {
@@ -34,9 +47,13 @@ export default function EditPet() {
             gender: pet.gender || "Unknown",
             description: pet.description || "",
             image: pet.image || "",
+            hasPhoto: Boolean(pet.hasPhoto),
+            photo: null,
             location: pet.location || "",
+            listingContactPhone: pet.listingContactPhone || "",
             healthStatus: pet.healthStatus || "Not specified",
             vaccinated: Boolean(pet.vaccinated),
+            adoptionFee: pet.adoptionFee ?? 0,
           });
         }
       } catch (err) {
@@ -75,20 +92,34 @@ export default function EditPet() {
       return;
     }
 
+    if (
+      !Number.isInteger(Number(form.adoptionFee)) ||
+      Number(form.adoptionFee) < 0 ||
+      Number(form.adoptionFee) > 1000000
+    ) {
+      setError("Adoption fee must be a whole amount between ₹0 and ₹1,000,000.");
+      return;
+    }
+
     try {
       setSubmitting(true);
 
-      await API.put(`/pets/${id}`, {
-        ...form,
-        name: form.name.trim(),
-        breed: form.breed.trim(),
-        description: form.description.trim(),
-        location: form.location.trim(),
-        age: Number(form.age),
-      });
+      await API.put(
+        `/pets/${id}`,
+        createPetFormData({
+          ...form,
+          name: form.name.trim(),
+          breed: form.breed.trim(),
+          description: form.description.trim(),
+          location: form.location.trim(),
+          age: Number(form.age),
+          adoptionFee: Number(form.adoptionFee),
+        }),
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
 
-      navigate("/shelter/pets", {
-        state: { message: "Pet listing updated successfully." },
+      navigate("/my-listings", {
+        state: { message: "Changes saved. The listing is hidden until an admin reviews it again." },
       });
     } catch (err) {
       setError(
@@ -216,18 +247,30 @@ export default function EditPet() {
             onChange={(e) => update("description", e.target.value)}
           />
 
-          <label className="form-label">
-            <ImagePlus size={17} /> Image URL
+          <label className="form-label" htmlFor="edit-pet-photo">
+            <ImagePlus size={17} /> Upload a new pet photo
           </label>
           <input
+            id="edit-pet-photo"
             className="form-control mb-3"
-            type="url"
-            value={form.image}
-            onChange={(e) => update("image", e.target.value)}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={(e) => update("photo", e.target.files?.[0] || null)}
           />
+          <small className="paw-muted d-block mb-3">
+            Optional. Upload a JPEG, PNG, or WebP image up to 5 MB to replace the current photo.
+          </small>
 
           <img
-            src={form.image || fallbackImage}
+            src={
+              photoPreview ||
+              getPetImageSrc({
+                _id: id,
+                image: form.image,
+                hasPhoto: form.hasPhoto,
+              }) ||
+              fallbackImage
+            }
             alt="Pet preview"
             onError={(e) => {
               e.currentTarget.onerror = null;
@@ -248,6 +291,35 @@ export default function EditPet() {
             value={form.location}
             onChange={(e) => update("location", e.target.value)}
           />
+
+          <label className="form-label" htmlFor="edit-listing-contact-phone">
+            Your contact phone *
+          </label>
+          <input
+            id="edit-listing-contact-phone"
+            className="form-control mb-3"
+            type="tel"
+            required
+            minLength={7}
+            maxLength={20}
+            pattern="[+]?[0-9 ()-]{7,20}"
+            value={form.listingContactPhone}
+            onChange={(e) => update("listingContactPhone", e.target.value)}
+          />
+
+          <label className="form-label">Adoption fee (₹)</label>
+          <input
+            className="form-control mb-1"
+            type="number"
+            min="0"
+            max="1000000"
+            step="1"
+            value={form.adoptionFee}
+            onChange={(e) => update("adoptionFee", e.target.value)}
+          />
+          <small className="paw-muted d-block mb-3">
+            Set 0 for no fee. Approved adoption fees are collected in cash at handoff.
+          </small>
 
           <label className="form-label">Health status</label>
           <input

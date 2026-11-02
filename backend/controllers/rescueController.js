@@ -12,8 +12,28 @@ export const createRescueReport = async (req, res) => {
   try {
     const { animalType, description, location, contactPhone } = req.body;
 
-    if (!animalType || !description || !location || !contactPhone) {
+    if (
+      !animalType ||
+      typeof description !== "string" ||
+      !location ||
+      !contactPhone
+    ) {
       return res.status(400).json({ success: false, message: "All required rescue details must be provided" });
+    }
+
+    const donationAmount =
+      req.body.donationAmount === undefined || req.body.donationAmount === ""
+        ? 0
+        : Number(req.body.donationAmount);
+    if (
+      !Number.isSafeInteger(donationAmount) ||
+      donationAmount < 0 ||
+      donationAmount > 1000000
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Donation pledge must be a whole amount between ₹0 and ₹1,000,000",
+      });
     }
 
     const report = await RescueReport.create({
@@ -22,7 +42,9 @@ export const createRescueReport = async (req, res) => {
       description,
       location,
       contactPhone,
-      image: req.body.image || ""
+      image: req.body.image || "",
+      donationAmount,
+      donationStatus: donationAmount > 0 ? "Pledged" : "None",
     });
 
     const reportDetails = [
@@ -114,7 +136,7 @@ export const updateRescueReport = async (req, res) => {
 
     const previousStatus = report.status;
     const previousAssigneeId = report.assignedRescuer?.toString() || "";
-    const { status, rescueNotes, assignedRescuer } = req.body;
+    const { status, rescueNotes, assignedRescuer, donationStatus } = req.body;
 
     if (req.user.role === "admin") {
       if (assignedRescuer !== undefined) {
@@ -178,14 +200,17 @@ export const updateRescueReport = async (req, res) => {
         });
       }
 
-      if (!["In Progress", "Resolved"].includes(status)) {
+      if (
+        status !== undefined &&
+        !["In Progress", "Resolved"].includes(status)
+      ) {
         return res.status(400).json({
           success: false,
           message: "Invalid rescuer status update",
         });
       }
 
-      report.status = status;
+      if (status !== undefined) report.status = status;
 
       if (rescueNotes !== undefined) {
         report.rescueNotes = rescueNotes;
@@ -195,6 +220,49 @@ export const updateRescueReport = async (req, res) => {
         success: false,
         message: "Not authorized",
       });
+    }
+
+    if (donationStatus !== undefined) {
+      if (donationStatus !== "Collected") {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid donation status update",
+        });
+      }
+
+      if (report.donationStatus !== "Pledged" || !(report.donationAmount > 0)) {
+        return res.status(409).json({
+          success: false,
+          message: "There is no outstanding donation pledge to collect",
+        });
+      }
+
+      const collectedAt = new Date();
+      const updateResult = await RescueReport.updateOne(
+        {
+          _id: req.params.id,
+          donationStatus: "Pledged",
+          donationAmount: { $gt: 0 },
+        },
+        {
+          $set: {
+            donationStatus: "Collected",
+            donationCollectedAt: collectedAt,
+            donationCollectedBy: req.user._id,
+          },
+        }
+      );
+
+      if (updateResult.modifiedCount !== 1) {
+        return res.status(409).json({
+          success: false,
+          message: "The donation pledge is no longer outstanding",
+        });
+      }
+
+      report.donationStatus = "Collected";
+      report.donationCollectedAt = collectedAt;
+      report.donationCollectedBy = req.user._id;
     }
 
     await report.save();

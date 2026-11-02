@@ -6,6 +6,7 @@ import {
   getShelterApplications,
   getApplicationById,
   reviewApplication,
+  collectAdoptionPayment,
 } from "../controllers/adoptionController.js";
 
 import {
@@ -48,6 +49,13 @@ router.patch(
   protect,
   authorize("shelter", "admin"),
   reviewApplication
+);
+
+router.patch(
+  "/:id/payment",
+  protect,
+  authorize("shelter", "admin"),
+  collectAdoptionPayment
 );
 
 export default router;

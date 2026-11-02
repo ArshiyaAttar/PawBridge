@@ -122,6 +122,33 @@ export default function AdminRescues() {
     }
   };
 
+  const collectDonation = async (report) => {
+    if (
+      !window.confirm(
+        `Confirm that ₹${Number(report.donationAmount).toLocaleString("en-IN")} was received for this rescue report?`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setUpdatingId(report._id);
+      setMessage("");
+      setError("");
+      await API.patch(`/rescues/${report._id}`, {
+        donationStatus: "Collected",
+      });
+      setMessage("Rescue donation recorded as collected.");
+      await loadData();
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Unable to record donation collection."
+      );
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   const count = (status) =>
     reports.filter((report) => report.status === status).length;
 
@@ -277,6 +304,25 @@ export default function AdminRescues() {
                 </div>
 
                 <p>{report.description}</p>
+
+                {Number(report.donationAmount) > 0 && (
+                  <div className="alert alert-light border">
+                    <strong>Cash donation pledge:</strong>{" "}
+                    ₹{Number(report.donationAmount).toLocaleString("en-IN")}
+                    <span className="ms-2">· {report.donationStatus}</span>
+                    {report.donationStatus === "Pledged" && (
+                      <button
+                        className="btn btn-sm btn-outline-success d-block mt-2"
+                        disabled={updatingId !== null}
+                        onClick={() => collectDonation(report)}
+                      >
+                        {updatingId === report._id
+                          ? "Recording..."
+                          : "Confirm cash collected"}
+                      </button>
+                    )}
+                  </div>
+                )}
 
                 <div className="row g-2 mb-3">
                   <div className="col-md-4">

@@ -20,6 +20,7 @@ const initialForm = {
   location: "",
   contactPhone: "",
   image: "",
+  donationAmount: "",
 };
 
 export default function Rescue() {
@@ -237,6 +238,28 @@ export default function Rescue() {
                 />
                 <small className="paw-muted">
                   Add a publicly accessible image link if available.
+                </small>
+              </div>
+
+              <div className="mb-4">
+                <label className="form-label fw-semibold" htmlFor="donation-amount">
+                  Optional rescue donation pledge (₹)
+                </label>
+                <input
+                  id="donation-amount"
+                  className="form-control"
+                  type="number"
+                  name="donationAmount"
+                  min="0"
+                  max="1000000"
+                  step="1"
+                  value={form.donationAmount}
+                  onChange={updateField}
+                  placeholder="0"
+                />
+                <small className="paw-muted">
+                  This records a cash pledge, not an online payment. An assigned rescuer or admin
+                  confirms collection.
                 </small>
               </div>
 
