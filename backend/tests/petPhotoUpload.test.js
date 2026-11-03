@@ -191,6 +191,7 @@ test("photo endpoint serves stored bytes using the verified media type", async (
 
   assert.deepEqual(res.body, photoBuffer);
   assert.equal(res.headers["Content-Type"], "image/png");
+  assert.equal(res.headers["Cross-Origin-Resource-Policy"], "cross-origin");
   assert.equal(res.headers["Cache-Control"], "no-cache");
   assert.equal(select.mock.calls[0].arguments[0], "+photoData +photoContentType");
 });

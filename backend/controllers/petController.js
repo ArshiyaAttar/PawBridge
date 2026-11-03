@@ -205,6 +205,7 @@ export const getPetPhoto = async (req, res) => {
     }
 
     res.set("Content-Type", pet.photoContentType);
+    res.set("Cross-Origin-Resource-Policy", "cross-origin");
     res.set("Cache-Control", "no-cache");
     return res.send(pet.photoData);
   } catch (error) {
