@@ -239,6 +239,45 @@ export const deletePet = async (req, res) => {
   }
 };
 
+export const getMyPetPhoto = async (req, res) => {
+  try {
+    const pet = await Pet.findOne({
+      _id: req.params.id,
+      isActive: true,
+      hasPhoto: true,
+    }).select("+photoData +photoContentType");
+
+    if (!pet?.photoData || !pet.photoContentType) {
+      return res.status(404).json({
+        success: false,
+        message: "Pet photo not found",
+      });
+    }
+
+    if (
+      req.user.role !== "admin" &&
+      pet.shelter.toString() !== req.user._id.toString()
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to view this pet photo",
+      });
+    }
+
+    res.set("Content-Type", pet.photoContentType);
+    res.set("Cache-Control", "private, no-store");
+    return res.send(pet.photoData);
+  } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(400).json({ success: false, message: "Invalid pet ID" });
+    }
+    return res.status(500).json({
+      success: false,
+      message: "Unable to fetch pet photo",
+    });
+  }
+};
+
 
 export const getMyPets = async (req, res) => {
   try {

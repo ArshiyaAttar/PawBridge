@@ -6,6 +6,7 @@ import {
   createPet,
   getPets,
   getPetPhoto,
+  getMyPetPhoto,
 } from "../controllers/petController.js";
 import { getImageContentType } from "../middleware/petPhotoUpload.js";
 import { reviewPetListing } from "../controllers/adminController.js";
@@ -192,4 +193,49 @@ test("photo endpoint serves stored bytes using the verified media type", async (
   assert.equal(res.headers["Content-Type"], "image/png");
   assert.equal(res.headers["Cache-Control"], "no-cache");
   assert.equal(select.mock.calls[0].arguments[0], "+photoData +photoContentType");
+});
+
+test("owner photo endpoint serves a pending listing photo to its shelter", async (t) => {
+  const photoBuffer = Buffer.from([0xff, 0xd8, 0xff, 0x00]);
+  const pet = {
+    shelter: { toString: () => "shelter-1" },
+    photoData: photoBuffer,
+    photoContentType: "image/jpeg",
+  };
+  const select = t.mock.fn(async () => pet);
+  t.mock.method(Pet, "findOne", () => ({ select }));
+  const res = response();
+
+  await getMyPetPhoto(
+    {
+      params: { id: "pet-1" },
+      user: { _id: "shelter-1", role: "shelter" },
+    },
+    res
+  );
+
+  assert.deepEqual(res.body, photoBuffer);
+  assert.equal(res.headers["Content-Type"], "image/jpeg");
+  assert.equal(res.headers["Cache-Control"], "private, no-store");
+});
+
+test("owner photo endpoint denies other shelters", async (t) => {
+  const pet = {
+    shelter: { toString: () => "shelter-1" },
+    photoData: Buffer.from([0xff, 0xd8, 0xff]),
+    photoContentType: "image/jpeg",
+  };
+  t.mock.method(Pet, "findOne", () => ({ select: async () => pet }));
+  const res = response();
+
+  await getMyPetPhoto(
+    {
+      params: { id: "pet-1" },
+      user: { _id: "shelter-2", role: "shelter" },
+    },
+    res
+  );
+
+  assert.equal(res.statusCode, 403);
+  assert.equal(res.body.message, "Not authorized to view this pet photo");
 });

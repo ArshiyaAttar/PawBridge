@@ -15,8 +15,11 @@ import API from "../services/api";
 import { getPetImageSrc } from "../services/petImages";
 import { useAuth } from "../context/AuthContext";
 
-const fallbackImage =
-  "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=900";
+const fallbackImages = {
+  Dog: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=900",
+  Cat: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=900",
+  Bird: "https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=900",
+};
 
 const getAgeLabel = (age) => {
   if (age === 0) return "Under 1 year";
@@ -188,11 +191,11 @@ export default function PetDetails() {
         <div className="col-lg-6">
           <div className="pet-detail-image-wrap">
             <img
-              src={getPetImageSrc(pet) || fallbackImage}
+              src={getPetImageSrc(pet) || fallbackImages[pet.species] || fallbackImages.Dog}
               alt={`${pet.name}, ${pet.species}`}
               onError={(e) => {
                 e.currentTarget.onerror = null;
-                e.currentTarget.src = fallbackImage;
+                e.currentTarget.src = fallbackImages[pet.species] || fallbackImages.Dog;
               }}
               className="pet-detail-image"
             />

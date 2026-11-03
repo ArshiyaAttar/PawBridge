@@ -3,10 +3,13 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, ImagePlus } from "lucide-react";
 import API from "../services/api";
-import { createPetFormData, getPetImageSrc } from "../services/petImages";
+import { createPetFormData } from "../services/petImages";
 
-const fallbackImage =
-  "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=700";
+const fallbackImages = {
+  Dog: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=700",
+  Cat: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=700",
+  Bird: "https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=700",
+};
 
 export default function EditPet() {
   const { id } = useParams();
@@ -17,6 +20,7 @@ export default function EditPet() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [photoPreview, setPhotoPreview] = useState("");
+  const [savedPhotoPreview, setSavedPhotoPreview] = useState("");
 
   useEffect(() => {
     if (!form?.photo) {
@@ -28,6 +32,33 @@ export default function EditPet() {
     setPhotoPreview(previewUrl);
     return () => URL.revokeObjectURL(previewUrl);
   }, [form?.photo]);
+
+  useEffect(() => {
+    if (!form?.hasPhoto) {
+      setSavedPhotoPreview("");
+      return undefined;
+    }
+
+    let active = true;
+    let previewUrl = "";
+
+    API.get(`/pets/mine/${id}/photo`, { responseType: "blob" })
+      .then(({ data }) => {
+        if (!active) return;
+        previewUrl = URL.createObjectURL(data);
+        setSavedPhotoPreview(previewUrl);
+      })
+      .catch((err) => {
+        if (active) {
+          setError(err.response?.data?.message || "Unable to load the current pet photo.");
+        }
+      });
+
+    return () => {
+      active = false;
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [form?.hasPhoto, id]);
 
   useEffect(() => {
     let active = true;
@@ -264,17 +295,15 @@ export default function EditPet() {
           <img
             src={
               photoPreview ||
-              getPetImageSrc({
-                _id: id,
-                image: form.image,
-                hasPhoto: form.hasPhoto,
-              }) ||
-              fallbackImage
+              savedPhotoPreview ||
+              form.image ||
+              fallbackImages[form.species] ||
+              fallbackImages.Dog
             }
             alt="Pet preview"
             onError={(e) => {
               e.currentTarget.onerror = null;
-              e.currentTarget.src = fallbackImage;
+              e.currentTarget.src = fallbackImages[form.species] || fallbackImages.Dog;
             }}
             className="w-100 mb-3"
             style={{

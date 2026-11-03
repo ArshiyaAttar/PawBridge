@@ -7,6 +7,7 @@ import {
   updatePet,
   deletePet,
   getPetPhoto,
+  getMyPetPhoto,
   getMyPetById,
 } from "../controllers/petController.js";
 import { protect, authorize } from "../middleware/authMiddleware.js";
@@ -17,6 +18,7 @@ const router = express.Router();
 router.get("/", getPets);
 
 // IMPORTANT: Keep /mine before /:id
+router.get("/mine/:id/photo", protect, getMyPetPhoto);
 router.get("/mine", protect, getMyPets);
 router.get("/mine/:id", protect, getMyPetById);
 
