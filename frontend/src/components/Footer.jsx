@@ -36,7 +36,7 @@ export default function Footer() {
               <>
                 <Link to="/dashboard">Dashboard</Link>
                 {user.role === "adopter" && (
-                  <Link to="/my-applications">Adoption applications</Link>
+                  <Link to="/my-adoptions">My adoptions</Link>
                 )}
                 {(user.role === "adopter" || user.role === "rescuer") && (
                   <Link to="/my-rescues">Rescue reports</Link>

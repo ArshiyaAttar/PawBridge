@@ -5,6 +5,7 @@ import {
   buildSubmissionEmail,
   buildSubmitterConfirmationEmail,
   buildAdoptionStatusEmail,
+  buildDirectAdoptionConfirmationEmail,
 } from "../services/emailTemplates.js";
 import { sendEmailNotifications } from "../services/emailService.js";
 
@@ -37,7 +38,8 @@ export const applyForAdoption = async (req, res) => {
 
     if (
       typeof applicantPhone !== "string" ||
-      !/^[+]?[\d\s()-]{7,20}$/.test(applicantPhone.trim())
+      !/^[+]?[\d\s()-]{7,20}$/.test(applicantPhone.trim()) ||
+      applicantPhone.replace(/\D/g, "").length < 7
     ) {
       return res.status(400).json({
         success: false,
@@ -165,6 +167,139 @@ export const applyForAdoption = async (req, res) => {
       return res.status(409).json({ success: false, message: "You have already applied for this pet" });
     }
     res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+export const buyPet = async (req, res) => {
+  const { applicantPhone } = req.body;
+
+  if (
+    typeof applicantPhone !== "string" ||
+    !/^[+]?[\d\s()-]{7,20}$/.test(applicantPhone.trim()) ||
+    applicantPhone.replace(/\D/g, "").length < 7
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "Please provide a valid contact phone number",
+    });
+  }
+
+  let session;
+  try {
+    session = await mongoose.startSession();
+    let purchase;
+    let petName;
+
+    await session.withTransaction(async () => {
+      const existing = await AdoptionApplication.findOne({
+        pet: req.params.petId,
+        applicant: req.user._id,
+      }).session(session);
+
+      if (existing?.status === "Approved") {
+        const error = new Error("You already have a confirmed adoption for this pet");
+        error.statusCode = 409;
+        throw error;
+      }
+
+      const pet = await Pet.findOneAndUpdate(
+        {
+          _id: req.params.petId,
+          status: "Available",
+          isActive: true,
+          listingApprovalStatus: "Approved",
+        },
+        { $set: { status: "Adopted" } },
+        { new: true, session }
+      );
+
+      if (!pet) {
+        const error = new Error("This pet is no longer available for adoption");
+        error.statusCode = 409;
+        throw error;
+      }
+      petName = pet.name;
+
+      const purchaseDetails = {
+        pet: pet._id,
+        applicant: req.user._id,
+        requestType: "Direct Purchase",
+        reason: "Direct adoption purchase",
+        applicantPhone: applicantPhone.trim(),
+        experience: "",
+        livingSituation: "",
+        householdConsent: false,
+        carePlan: "",
+        vetReference: "",
+        homeDeliveryRequested: false,
+        deliveryAddress: "",
+        deliveryStatus: "Not Requested",
+        status: "Approved",
+        shelterNotes: "",
+        reviewedBy: null,
+        reviewedAt: new Date(),
+        adoptionFee: pet.adoptionFee || 0,
+        paymentMethod: "COD",
+        paymentStatus: pet.adoptionFee > 0 ? "Pending" : "Not Required",
+      };
+
+      if (existing) {
+        Object.assign(existing, purchaseDetails);
+        await existing.save({ session });
+        purchase = existing;
+      } else {
+        const [createdPurchase] = await AdoptionApplication.create(
+          [purchaseDetails],
+          { session }
+        );
+        purchase = createdPurchase;
+      }
+
+      await AdoptionApplication.updateMany(
+        {
+          pet: pet._id,
+          _id: { $ne: purchase._id },
+          status: { $in: ["Pending", "Under Review"] },
+        },
+        {
+          $set: {
+            status: "Rejected",
+            shelterNotes: "Pet adopted through a direct purchase.",
+            reviewedAt: new Date(),
+          },
+        },
+        { session }
+      );
+    });
+
+    const email = buildDirectAdoptionConfirmationEmail({
+      name: req.user.name,
+      petName,
+      adoptionFee: purchase.adoptionFee,
+    });
+    const emailResults = await sendEmailNotifications([{
+      eventKey: `direct-adoption:${purchase._id}`,
+      type: "purchase_confirmation",
+      to: req.user.email,
+      subject: "Your PawBridge adoption is confirmed",
+      ...email,
+    }]);
+
+    return res.status(201).json({
+      success: true,
+      message: "Adoption confirmed. The shelter will coordinate the handoff.",
+      emailNotificationSent: emailResults.allSent,
+      application: purchase,
+    });
+  } catch (error) {
+    return res.status(error.statusCode || (error.code === 11000 ? 409 : 400)).json({
+      success: false,
+      message: error.code === 11000
+        ? "You already have an adoption record for this pet"
+        : error.message || "Unable to confirm this adoption",
+    });
+  } finally {
+    if (session) await session.endSession();
   }
 };
 

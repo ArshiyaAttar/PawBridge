@@ -76,8 +76,8 @@ export default function Navbar() {
                     My listings
                   </NavLink>
                   {user.role === "adopter" && (
-                    <NavLink to="/my-applications" className={linkClass}>
-                      Applications
+                    <NavLink to="/my-adoptions" className={linkClass}>
+                      My adoptions
                     </NavLink>
                   )}
                   {(user.role === "adopter" || user.role === "rescuer") && (

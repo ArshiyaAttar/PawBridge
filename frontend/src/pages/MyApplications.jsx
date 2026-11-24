@@ -58,11 +58,9 @@ export default function MyApplications() {
       <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
           <span className="eyebrow">YOUR ADOPTION JOURNEY</span>
-          <h1 className="section-title mt-2">
-            My <span>applications.</span>
-          </h1>
+          <h1 className="section-title mt-2">My <span>adoptions.</span></h1>
           <p className="paw-muted mb-0">
-            Follow the progress of your adoption requests.
+            Review confirmed adoptions and any older requests.
           </p>
         </div>
 
@@ -114,7 +112,7 @@ export default function MyApplications() {
       {loading && (
         <div className="text-center py-5">
           <div className="spinner-border text-success" />
-          <p className="paw-muted mt-3">Loading your applications...</p>
+          <p className="paw-muted mt-3">Loading your adoptions...</p>
         </div>
       )}
 
@@ -123,10 +121,10 @@ export default function MyApplications() {
       {!loading && !error && filteredApplications.length === 0 && (
         <div className="feature-card text-center py-5">
           <PawPrint size={48} className="text-success mb-3" />
-          <h4>No applications found</h4>
+          <h4>No adoptions found</h4>
           <p className="paw-muted">
             {applications.length
-              ? "There are no applications in this status."
+              ? "There are no adoption records in this status."
               : "Your adoption journey starts with finding a companion."}
           </p>
           {!applications.length && (
@@ -158,12 +156,16 @@ export default function MyApplications() {
                       statusStyles[app.status] || "text-bg-secondary"
                     }`}
                   >
-                    {app.status}
+                    {app.requestType === "Direct Purchase" ? "Confirmed" : app.status}
                   </span>
                 </div>
 
                 <hr />
 
+                <p className="mb-1">
+                  <strong>Type:</strong>{" "}
+                  {app.requestType === "Direct Purchase" ? "Direct adoption" : "Adoption request"}
+                </p>
                 <p className="mb-1">
                   <strong>Adoption fee:</strong>{" "}
                   ₹{Number(app.adoptionFee || 0).toLocaleString("en-IN")}
@@ -171,17 +173,21 @@ export default function MyApplications() {
                 <p className="mb-1">
                   <strong>Payment:</strong> COD · {app.paymentStatus || "Not Required"}
                 </p>
-                <p className="mb-3">
+                {app.requestType !== "Direct Purchase" && <p className="mb-3">
                   <strong>Home delivery:</strong>{" "}
                   {app.homeDeliveryRequested
                     ? app.deliveryStatus || "Pending Review"
                     : "Not requested"}
-                </p>
+                </p>}
 
-                <p className="fw-semibold mb-2">My reason for adoption</p>
-                <p className="paw-muted">
-                  {app.reason || "No reason provided."}
-                </p>
+                {app.requestType !== "Direct Purchase" && (
+                  <>
+                    <p className="fw-semibold mb-2">My reason for adoption</p>
+                    <p className="paw-muted">
+                      {app.reason || "No reason provided."}
+                    </p>
+                  </>
+                )}
 
                 {app.shelterNotes && (
                   <div className="alert alert-light border">
@@ -192,11 +198,11 @@ export default function MyApplications() {
 
                 <div className="d-flex flex-wrap gap-2 mt-3">
                   <Link
-                    to={`/applications/${app._id}`}
+                    to={`/adoptions/${app._id}`}
                     className="btn btn-success btn-sm"
                   >
                     <Eye size={15} className="me-1" />
-                    View application details
+                    View adoption details
                   </Link>
 
                   {app.pet?._id && (

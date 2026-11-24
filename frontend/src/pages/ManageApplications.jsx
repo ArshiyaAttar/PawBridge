@@ -157,10 +157,10 @@ export default function ManageApplications() {
         <div>
           <p className="text-success fw-semibold mb-1">SHELTER MANAGEMENT</p>
           <h1 className="section-title mb-2">
-            Adoption <span>applications</span>
+            Adoptions <span>&amp; requests</span>
           </h1>
           <p className="paw-muted mb-0">
-            Review applications and help pets find their forever homes.
+            Review older requests, direct adoptions, and COD handoffs.
           </p>
         </div>
 
@@ -278,12 +278,12 @@ export default function ManageApplications() {
       {loading ? (
         <div className="text-center py-5">
           <div className="spinner-border text-success" role="status" />
-          <p className="paw-muted mt-3">Loading applications...</p>
+          <p className="paw-muted mt-3">Loading adoption records...</p>
         </div>
       ) : filteredApplications.length === 0 ? (
         <div className="feature-card text-center py-5">
           <PawPrint size={42} className="text-success mb-3" />
-          <h4>No applications found</h4>
+          <h4>No adoption records found</h4>
           <p className="paw-muted mb-0">
             Try changing your search or status filter.
           </p>
@@ -301,7 +301,9 @@ export default function ManageApplications() {
                   <div className="d-flex justify-content-between align-items-start gap-2 mb-3">
                     <div>
                       <p className="text-success small fw-semibold mb-1">
-                        PET APPLICATION
+                        {application.requestType === "Direct Purchase"
+                          ? "DIRECT ADOPTION"
+                          : "OLDER ADOPTION REQUEST"}
                       </p>
                       <h5 className="mb-1">
                         {application.pet?.name || "Pet unavailable"}
@@ -315,7 +317,9 @@ export default function ManageApplications() {
                     </div>
 
                     <span className={`badge ${statusClass(application.status)}`}>
-                      {application.status}
+                      {application.requestType === "Direct Purchase"
+                        ? "Confirmed"
+                        : application.status}
                     </span>
                   </div>
 
@@ -345,39 +349,38 @@ export default function ManageApplications() {
                     <p className="mb-1">
                       <strong>Payment:</strong> COD · {application.paymentStatus || "Not Required"}
                     </p>
-                    <strong>Home delivery:</strong>{" "}
-                    {application.homeDeliveryRequested
-                      ? `${application.deliveryStatus} — ${application.deliveryAddress}`
-                      : "Not requested"}
+                    {application.requestType === "Direct Purchase" ? (
+                      <strong>Handoff:</strong>
+                    ) : (
+                      <strong>Home delivery:</strong>
+                    )}{" "}
+                    {application.requestType === "Direct Purchase"
+                      ? "Coordinate directly with adopter"
+                      : application.homeDeliveryRequested
+                        ? `${application.deliveryStatus} — ${application.deliveryAddress}`
+                        : "Not requested"}
                   </div>
 
-                  <h6>Why they want to adopt</h6>
-                  <p className="paw-muted">
-                    {application.reason || "No reason provided."}
-                  </p>
-
-                  <h6>Previous pet experience</h6>
-                  <p className="paw-muted">
-                    {application.experience || "Not provided"}
-                  </p>
-
-                  <h6>Living situation</h6>
-                  <p className="paw-muted">
-                    {application.livingSituation || "Not provided"}
-                  </p>
-
-                  <h6>Pet-care plan</h6>
-                  <p className="paw-muted">
-                    {application.carePlan || "Not provided"}
-                  </p>
-                  <p className="mb-2">
-                    <strong>Household consent:</strong>{" "}
-                    {application.householdConsent ? "Confirmed" : "Not recorded"}
-                  </p>
-                  <p className="mb-3">
-                    <strong>Veterinarian reference:</strong>{" "}
-                    {application.vetReference || "Not provided"}
-                  </p>
+                  {application.requestType !== "Direct Purchase" && (
+                    <>
+                      <h6>Why they want to adopt</h6>
+                      <p className="paw-muted">{application.reason || "No reason provided."}</p>
+                      <h6>Previous pet experience</h6>
+                      <p className="paw-muted">{application.experience || "Not provided"}</p>
+                      <h6>Living situation</h6>
+                      <p className="paw-muted">{application.livingSituation || "Not provided"}</p>
+                      <h6>Pet-care plan</h6>
+                      <p className="paw-muted">{application.carePlan || "Not provided"}</p>
+                      <p className="mb-2">
+                        <strong>Household consent:</strong>{" "}
+                        {application.householdConsent ? "Confirmed" : "Not recorded"}
+                      </p>
+                      <p className="mb-3">
+                        <strong>Veterinarian reference:</strong>{" "}
+                        {application.vetReference || "Not provided"}
+                      </p>
+                    </>
+                  )}
 
                   {application.shelterNotes && (
                     <div className="alert alert-light border">

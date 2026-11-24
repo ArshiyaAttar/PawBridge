@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   buildAdoptionStatusEmail,
   buildBrandedEmail,
+  buildDirectAdoptionConfirmationEmail,
   buildRescueAssignmentEmail,
   buildRescueResolvedEmail,
   buildSubmissionEmail,
@@ -32,6 +33,11 @@ test("builds a PawBridge-branded email for every notification workflow", () => {
     buildSubmitterConfirmationEmail({ kind: "rescue", name: "Alex", details: [] }),
     buildAdoptionStatusEmail({ name: "Alex", petName: "Milo", status: "Approved" }),
     buildAdoptionStatusEmail({ name: "Alex", petName: "Milo", status: "Rejected" }),
+    buildDirectAdoptionConfirmationEmail({
+      name: "Alex",
+      petName: "Milo",
+      adoptionFee: 750,
+    }),
     buildRescueAssignmentEmail({
       rescuerName: "Sam",
       animalType: "Dog",

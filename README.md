@@ -54,8 +54,8 @@ PawBridge/
 - Register and log in securely
 - Browse, search, and filter available pets
 - View pet age, breed, gender, location, health, and vaccination details
-- Submit and track adoption applications
-- View application status and history
+- Confirm an adoption directly from a pet profile
+- View confirmed adoptions and older request history
 - Ask questions through pet-specific shelter conversations
 - Manage profile and password
 
@@ -64,8 +64,8 @@ PawBridge/
 - Add, edit, and deactivate pet listings
 - Upload pet photos directly with listings (JPEG, PNG, or WebP; up to 5 MB), stored in MongoDB
 - Allow signed-in community members to request pet listings; admins approve listings before publication
-- Review adoption applications for their own pets
-- Approve, reject, or place applications under review
+- Review older adoption requests and direct adoption records for their own pets
+- Approve, reject, or place older requests under review
 - Communicate with prospective adopters
 - View shelter dashboard statistics
 
@@ -165,7 +165,7 @@ cd backend
 npm run seed:demo
 ```
 
-The seed creates four demo roles, sixteen fictional sample pets across puppy, adult, kitten, senior, bird, and special-care categories, and pending, approved, and rejected applications. It is repeat-safe, preserves existing records, and is intended for development databases only. See [DEMO_GUIDE.md](./DEMO_GUIDE.md) for the complete procedure.
+The seed creates four demo roles, sixteen fictional sample pets across puppy, adult, kitten, senior, bird, and special-care categories, example adoption records, and four sample rescue reports in different statuses. It is repeat-safe, preserves existing records, and is intended for development databases only. See [DEMO_GUIDE.md](./DEMO_GUIDE.md) for the complete procedure.
 
 Email notifications use SMTP and are configured only through backend environment variables. See [EMAIL_SETUP.md](./EMAIL_SETUP.md) for Gmail, Brevo, local, and Render setup instructions.
 
@@ -201,8 +201,8 @@ The frontend uses lazy-loaded routes to keep the initial JavaScript bundle small
 - `GET /api/auth/me` — current authenticated user
 - `GET /api/pets` — pet listing and filters
 - `GET /api/pets/:id` — pet details
-- `POST /api/adoptions/:petId/apply` — submit adoption application
-- `GET /api/adoptions/my` — adopter applications
+- `POST /api/adoptions/:petId/buy` — confirm direct adoption (COD at handoff)
+- `GET /api/adoptions/my` — adopter records and request history
 - `GET /api/adoptions/manage` — shelter/admin application management
 - `PATCH /api/adoptions/:id/review` — review an application
 - `GET /api/messages/pet/:petId` — authenticated pet conversation

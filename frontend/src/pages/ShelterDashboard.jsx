@@ -48,7 +48,7 @@ export default function ShelterDashboard() {
         <div className="col-md-4">
           <div className="feature-card">
             <h3>{applications.length}</h3>
-            <p>Applications received</p>
+            <p>Adoptions &amp; requests</p>
           </div>
         </div>
 
@@ -57,7 +57,7 @@ export default function ShelterDashboard() {
             <h3>
               {applications.filter((app) => app.status === "Pending").length}
             </h3>
-            <p>Pending applications</p>
+            <p>Pending requests</p>
           </div>
         </div>
       </div>
@@ -72,7 +72,7 @@ export default function ShelterDashboard() {
         </Link>
 
         <Link to="/shelter/applications" className="btn btn-outline-success">
-          Review applications
+          Review adoptions &amp; requests
         </Link>
       </div>
     </main>

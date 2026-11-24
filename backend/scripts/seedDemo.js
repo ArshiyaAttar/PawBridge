@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 import Pet from "../models/Pet.js";
 import AdoptionApplication from "../models/AdoptionApplication.js";
+import RescueReport from "../models/RescueReport.js";
 
 dotenv.config();
 
@@ -37,6 +38,46 @@ const demoPets = [
   { key: "kiwi", name: "Kiwi", species: "Other", category: "Special Care", breed: "Rabbit", age: 2, gender: "Female", location: "Kolkata", healthStatus: "Healthy; indoor enclosure required", vaccinated: false, status: "Available", description: "Kiwi is a soft-natured rabbit who enjoys leafy treats and a secure indoor enclosure.", image: "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=700" },
   { key: "zoro", name: "Zoro", species: "Dog", category: "Special Care", breed: "Three-legged indie", age: 3, gender: "Male", location: "Ahmedabad", healthStatus: "Healthy; mobility adapted", vaccinated: true, status: "Available", description: "Zoro is resilient, affectionate, and ready for a family that celebrates his unique journey.", image: "https://images.unsplash.com/photo-1554692918-08fa0fdc9db3?w=700" },
   { key: "sky", name: "Sky", species: "Bird", category: "Bird", breed: "Cockatiel", age: 2, gender: "Female", location: "Goa", healthStatus: "Healthy; social and active", vaccinated: false, status: "Available", description: "Sky is a friendly cockatiel who loves music, gentle attention, and a roomy safe habitat.", image: "https://images.unsplash.com/photo-1444464666168-49d633b86797?w=700" },
+];
+
+const demoRescueReports = [
+  {
+    key: "injured-dog",
+    animalType: "Dog",
+    description: "A limping dog was seen near the market. Please check the front left paw and arrange a safe assessment.",
+    location: "Solapur market area",
+    contactPhone: "555-0101",
+    status: "Submitted",
+  },
+  {
+    key: "kitten-under-shelter",
+    animalType: "Cat",
+    description: "A young kitten was found under a shop awning during heavy rain. It is now in a dry, quiet spot.",
+    location: "Akkalkot bus stand",
+    contactPhone: "555-0102",
+    status: "Assigned",
+    rescueNotes: "Demo case assigned; rescuer is arranging a safe pickup.",
+  },
+  {
+    key: "bird-wing-injury",
+    animalType: "Bird",
+    description: "A small bird with a possible wing injury was found in a garden. It is being kept in a ventilated box.",
+    location: "Solapur public garden",
+    contactPhone: "555-0103",
+    status: "In Progress",
+    rescueNotes: "Rescuer is coordinating a check with a local wildlife-care contact.",
+    donationAmount: 250,
+    donationStatus: "Pledged",
+  },
+  {
+    key: "puppy-reunited",
+    animalType: "Dog",
+    description: "A lost puppy was reported near the community hall and safely reunited with its family.",
+    location: "Barshi community hall",
+    contactPhone: "555-0104",
+    status: "Resolved",
+    rescueNotes: "Family confirmed the puppy is home and safe.",
+  },
 ];
 
 const requireDemoConfig = () => {
@@ -105,6 +146,22 @@ const getOrCreatePet = async (pet, shelterId) => {
   });
 };
 
+const createRescueReportIfMissing = async (report, reporter, rescuer) => {
+  const demoKey = `demo-${report.key}`;
+  const existing = await RescueReport.findOne({ demoKey });
+  if (existing) return existing;
+
+  return RescueReport.create({
+    ...report,
+    reporter: reporter._id,
+    assignedRescuer: ["Assigned", "In Progress"].includes(report.status)
+      ? rescuer._id
+      : null,
+    donationStatus: report.donationAmount ? report.donationStatus : "None",
+    demoKey,
+  });
+};
+
 const createApplicationIfMissing = async ({ pet, applicant, reviewer, status, reason, shelterNotes }) => {
   const existing = await AdoptionApplication.findOne({ pet: pet._id, applicant: applicant._id });
   if (existing) return existing;
@@ -133,6 +190,10 @@ const seedDemo = async () => {
     const pets = {};
     for (const pet of demoPets) pets[pet.key] = await getOrCreatePet(pet, users.shelter._id);
 
+    for (const report of demoRescueReports) {
+      await createRescueReportIfMissing(report, users.adopter, users.rescuer);
+    }
+
     await createApplicationIfMissing({
       pet: pets.bruno,
       applicant: users.adopter,
@@ -158,7 +219,7 @@ const seedDemo = async () => {
       shelterNotes: "Another applicant was a closer fit for this pet.",
     });
 
-    console.log(`Demo seed complete: ${demoUsers.length} users, ${demoPets.length} pets, and 3 applications are available.`);
+    console.log(`Demo seed complete: ${demoUsers.length} users, ${demoPets.length} pets, 3 applications, and ${demoRescueReports.length} rescue reports are available.`);
   } catch (error) {
     console.error("Demo seed failed:", error.message);
     process.exitCode = 1;

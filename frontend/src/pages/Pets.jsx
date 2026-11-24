@@ -251,7 +251,7 @@ export default function Pets() {
                       <Activity size={15} /> {pet.healthStatus || "Health details available on profile"}
                     </p>
                     <Link to={`/pets/${pet._id}`} className="btn paw-primary w-100">
-                      Meet {pet.name}
+                      View &amp; Adopt {pet.name}
                     </Link>
                   </div>
                 </div>
@@ -266,7 +266,7 @@ export default function Pets() {
             <span className="eyebrow">PAWBRIDGE SHOWCASE</span>
             <h2 id="sample-profiles-title" className="section-title mb-2">Explore sample <span>profiles.</span></h2>
             <p className="paw-muted mx-auto section-description">
-              These fictional examples demonstrate the detail a complete adoption listing can include. They are not live listings and cannot receive applications.
+              These fictional examples demonstrate the detail a complete adoption listing can include. They are not live listings and cannot be adopted.
             </p>
           </div>
           <div className="row g-4">

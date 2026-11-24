@@ -21,7 +21,8 @@ const rescueReportSchema = new mongoose.Schema({
     default: "Submitted"
   },
   assignedRescuer: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
-  rescueNotes: { type: String, default: "" }
+  rescueNotes: { type: String, default: "" },
+  demoKey: { type: String, unique: true, sparse: true, index: true }
 }, { timestamps: true });
 
 export default mongoose.model("RescueReport", rescueReportSchema);

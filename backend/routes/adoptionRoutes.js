@@ -2,6 +2,7 @@
 import express from "express";
 import {
   applyForAdoption,
+  buyPet,
   getMyApplications,
   getShelterApplications,
   getApplicationById,
@@ -21,6 +22,13 @@ router.post(
   protect,
   authorize("adopter"),
   applyForAdoption
+);
+
+router.post(
+  "/:petId/buy",
+  protect,
+  authorize("adopter"),
+  buyPet
 );
 
 router.get(

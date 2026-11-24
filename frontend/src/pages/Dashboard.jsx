@@ -16,7 +16,7 @@ import { useAuth } from "../context/AuthContext";
 export default function Dashboard() {
   const { user } = useAuth();
   const [stats, setStats] = useState({
-    applications: 0,
+    adoptions: 0,
     rescues: 0,
   });
   const [loading, setLoading] = useState(false);
@@ -26,7 +26,7 @@ export default function Dashboard() {
       { title: "Browse pets", url: "/pets", icon: PawPrint },
       { title: "List a pet", url: "/list-pet", icon: HeartHandshake },
       { title: "My pet listings", url: "/my-listings", icon: PawPrint },
-      { title: "My applications", url: "/my-applications", icon: ClipboardList },
+      { title: "My adoptions", url: "/my-adoptions", icon: ClipboardList },
       { title: "Report an animal", url: "/rescue", icon: HeartHandshake },
       { title: "My rescue reports", url: "/my-rescues", icon: Activity },
       { title: "My profile", url: "/profile", icon: User },
@@ -65,15 +65,15 @@ export default function Dashboard() {
       setLoading(true);
 
       try {
-        const [applicationsResponse, rescuesResponse] =
+        const [adoptionsResponse, rescuesResponse] =
           await Promise.all([
             API.get("/adoptions/my"),
             API.get("/rescues"),
           ]);
 
         setStats({
-          applications: applicationsResponse.data.count ??
-            applicationsResponse.data.applications?.length ?? 0,
+          adoptions: adoptionsResponse.data.count ??
+            adoptionsResponse.data.applications?.length ?? 0,
           rescues: rescuesResponse.data.count ??
             rescuesResponse.data.reports?.length ?? 0,
         });
@@ -106,8 +106,8 @@ export default function Dashboard() {
           <div className="col-md-6">
             <div className="feature-card">
               <ClipboardList size={28} className="text-success mb-2" />
-              <h3>{loading ? "..." : stats.applications}</h3>
-              <p className="paw-muted mb-0">My adoption applications</p>
+              <h3>{loading ? "..." : stats.adoptions}</h3>
+              <p className="paw-muted mb-0">My adoptions and requests</p>
             </div>
           </div>
 

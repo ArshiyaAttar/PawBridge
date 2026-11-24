@@ -3,6 +3,11 @@ import mongoose from "mongoose";
 const adoptionApplicationSchema = new mongoose.Schema({
   pet: { type: mongoose.Schema.Types.ObjectId, ref: "Pet", required: true },
   applicant: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  requestType: {
+    type: String,
+    enum: ["Application", "Direct Purchase"],
+    default: "Application",
+  },
   reason: { type: String, required: true },
   applicantPhone: { type: String, default: "" },
   experience: { type: String, default: "" },

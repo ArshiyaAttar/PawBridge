@@ -7,6 +7,7 @@ import RescueReport from "../models/RescueReport.js";
 
 import {
   applyForAdoption,
+  buyPet,
   collectAdoptionPayment,
   reviewApplication,
 } from "../controllers/adoptionController.js";
@@ -32,9 +33,170 @@ const queryFor = (document) => ({
   populate() {
     return this;
   },
+  session() {
+    return this;
+  },
   then(resolve, reject) {
     return Promise.resolve(document).then(resolve, reject);
   },
+});
+
+test("direct adoption confirms immediately and snapshots the COD fee", async (t) => {
+  const originalNotificationsEnabled = process.env.EMAIL_NOTIFICATIONS_ENABLED;
+  process.env.EMAIL_NOTIFICATIONS_ENABLED = "false";
+  t.after(() => {
+    if (originalNotificationsEnabled === undefined) {
+      delete process.env.EMAIL_NOTIFICATIONS_ENABLED;
+    } else {
+      process.env.EMAIL_NOTIFICATIONS_ENABLED = originalNotificationsEnabled;
+    }
+  });
+
+  const pet = {
+    _id: "pet-1",
+    name: "Milo",
+    status: "Available",
+    isActive: true,
+    adoptionFee: 750,
+  };
+  let createdPurchase;
+  const session = {
+    withTransaction: async (operation) => operation(),
+    endSession: async () => {},
+  };
+  t.mock.method(mongoose, "startSession", async () => session);
+  t.mock.method(AdoptionApplication, "findOne", () => queryFor(null));
+  t.mock.method(Pet, "findOneAndUpdate", async (filter, update, options) => {
+    assert.equal(filter.status, "Available");
+    assert.equal(filter.listingApprovalStatus, "Approved");
+    assert.equal(update.$set.status, "Adopted");
+    assert.equal(options.session, session);
+    return pet;
+  });
+  t.mock.method(AdoptionApplication, "create", async ([purchase]) => {
+    createdPurchase = purchase;
+    return [{ ...purchase, _id: "purchase-1" }];
+  });
+  t.mock.method(AdoptionApplication, "updateMany", async () => ({ modifiedCount: 0 }));
+
+  const res = response();
+  await buyPet(
+    {
+      params: { petId: "pet-1" },
+      body: { applicantPhone: "1234567890" },
+      user: {
+        _id: "adopter-1",
+        name: "Demo Adopter",
+        email: "adopter@example.test",
+      },
+    },
+    res
+  );
+
+  assert.equal(res.statusCode, 201);
+  assert.equal(createdPurchase.requestType, "Direct Purchase");
+  assert.equal(createdPurchase.status, "Approved");
+  assert.equal(createdPurchase.adoptionFee, 750);
+  assert.equal(createdPurchase.paymentMethod, "COD");
+  assert.equal(createdPurchase.paymentStatus, "Pending");
+});
+
+test("direct adoption replaces the adopter's older request for the same available pet", async (t) => {
+  const originalNotificationsEnabled = process.env.EMAIL_NOTIFICATIONS_ENABLED;
+  process.env.EMAIL_NOTIFICATIONS_ENABLED = "false";
+  t.after(() => {
+    if (originalNotificationsEnabled === undefined) {
+      delete process.env.EMAIL_NOTIFICATIONS_ENABLED;
+    } else {
+      process.env.EMAIL_NOTIFICATIONS_ENABLED = originalNotificationsEnabled;
+    }
+  });
+
+  const session = {
+    withTransaction: async (operation) => operation(),
+    endSession: async () => {},
+  };
+  const existing = {
+    _id: "application-old",
+    status: "Rejected",
+    async save(options) {
+      assert.equal(options.session, session);
+    },
+  };
+  t.mock.method(mongoose, "startSession", async () => session);
+  t.mock.method(AdoptionApplication, "findOne", () => queryFor(existing));
+  t.mock.method(Pet, "findOneAndUpdate", async () => ({
+    _id: "pet-1",
+    name: "Luna",
+    status: "Adopted",
+    adoptionFee: 0,
+  }));
+  const createPurchase = t.mock.method(AdoptionApplication, "create", async () => []);
+  t.mock.method(AdoptionApplication, "updateMany", async () => ({ modifiedCount: 0 }));
+
+  const res = response();
+  await buyPet(
+    {
+      params: { petId: "pet-1" },
+      body: { applicantPhone: "1234567890" },
+      user: { _id: "adopter-1", name: "Demo Adopter", email: "adopter@example.test" },
+    },
+    res
+  );
+
+  assert.equal(res.statusCode, 201);
+  assert.equal(existing.requestType, "Direct Purchase");
+  assert.equal(existing.status, "Approved");
+  assert.equal(existing.paymentStatus, "Not Required");
+  assert.equal(createPurchase.mock.callCount(), 0);
+});
+
+test("direct adoption rejects unavailable pets without creating a record", async (t) => {
+  const originalNotificationsEnabled = process.env.EMAIL_NOTIFICATIONS_ENABLED;
+  process.env.EMAIL_NOTIFICATIONS_ENABLED = "false";
+  t.after(() => {
+    if (originalNotificationsEnabled === undefined) {
+      delete process.env.EMAIL_NOTIFICATIONS_ENABLED;
+    } else {
+      process.env.EMAIL_NOTIFICATIONS_ENABLED = originalNotificationsEnabled;
+    }
+  });
+
+  const session = {
+    withTransaction: async (operation) => operation(),
+    endSession: async () => {},
+  };
+  t.mock.method(mongoose, "startSession", async () => session);
+  t.mock.method(AdoptionApplication, "findOne", () => queryFor(null));
+  t.mock.method(Pet, "findOneAndUpdate", async () => null);
+  const createPurchase = t.mock.method(AdoptionApplication, "create", async () => []);
+
+  const res = response();
+  await buyPet(
+    {
+      params: { petId: "pet-1" },
+      body: { applicantPhone: "1234567890" },
+      user: { _id: "adopter-1", name: "Demo Adopter", email: "adopter@example.test" },
+    },
+    res
+  );
+
+  assert.equal(res.statusCode, 409);
+  assert.equal(createPurchase.mock.callCount(), 0);
+});
+
+test("direct adoption requires a valid contact phone", async () => {
+  const res = response();
+  await buyPet(
+    {
+      params: { petId: "pet-1" },
+      body: { applicantPhone: "-------" },
+      user: { _id: "adopter-1", name: "Demo Adopter", email: "adopter@example.test" },
+    },
+    res
+  );
+
+  assert.equal(res.statusCode, 400);
 });
 
 test("adoption requests snapshot the shelter fee and requested delivery details", async (t) => {

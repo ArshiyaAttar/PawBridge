@@ -8,6 +8,7 @@ import {
   Home,
   MapPin,
   MessageCircle,
+  ShoppingCart,
   ShieldCheck,
   VenusAndMars,
 } from "lucide-react";
@@ -34,20 +35,12 @@ export default function PetDetails() {
   const { user, loading: authLoading } = useAuth();
 
   const [pet, setPet] = useState(null);
-  const [reason, setReason] = useState("");
-  const [experience, setExperience] = useState("");
-  const [livingSituation, setLivingSituation] = useState("");
   const [applicantPhone, setApplicantPhone] = useState(user?.phone || "");
-  const [householdConsent, setHouseholdConsent] = useState(false);
-  const [carePlan, setCarePlan] = useState("");
-  const [vetReference, setVetReference] = useState("");
-  const [homeDeliveryRequested, setHomeDeliveryRequested] = useState(false);
-  const [deliveryAddress, setDeliveryAddress] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [purchased, setPurchased] = useState(false);
   const [conversation, setConversation] = useState([]);
   const [messageText, setMessageText] = useState("");
   const [messageLoading, setMessageLoading] = useState(false);
@@ -80,6 +73,10 @@ export default function PetDetails() {
   }, [id]);
 
   useEffect(() => {
+    if (user?.phone) setApplicantPhone(user.phone);
+  }, [user?.phone]);
+
+  useEffect(() => {
     if (!user || !["adopter", "shelter", "admin"].includes(user.role)) {
       setConversation([]);
       return undefined;
@@ -104,38 +101,26 @@ export default function PetDetails() {
     };
   }, [id, user]);
 
-  const apply = async (e) => {
+  const buy = async (e) => {
     e.preventDefault();
-
-    if (reason.trim().length < 10) {
-      setMessage("Please provide at least 10 characters.");
-      return;
-    }
 
     try {
       setSubmitting(true);
       setMessage("");
-      const { data } = await API.post(`/adoptions/${id}/apply`, {
-        reason: reason.trim(),
+      const { data } = await API.post(`/adoptions/${id}/buy`, {
         applicantPhone: applicantPhone.trim(),
-        experience: experience.trim(),
-        livingSituation: livingSituation.trim(),
-        householdConsent,
-        carePlan: carePlan.trim(),
-        vetReference: vetReference.trim(),
-        homeDeliveryRequested,
-        deliveryAddress: homeDeliveryRequested ? deliveryAddress.trim() : "",
       });
-      setSubmitted(true);
+      setPurchased(true);
+      setPet((current) => ({ ...current, status: "Adopted" }));
       const emailNotice =
         data.emailNotificationSent === false
-          ? " Your application is saved, but we couldn't send the email notifications."
+          ? " Adoption is confirmed, but we couldn't send the confirmation email."
           : "";
       setMessage(
-        `${data.message || "Your adoption application was submitted!"}${emailNotice}`
+        `${data.message || "Adoption confirmed!"}${emailNotice}`
       );
     } catch (err) {
-      setMessage(err.response?.data?.message || "Application failed.");
+      setMessage(err.response?.data?.message || "Unable to confirm this adoption.");
     } finally {
       setSubmitting(false);
     }
@@ -236,10 +221,10 @@ export default function PetDetails() {
           <section className="adoption-tip-panel mb-4">
             <Home size={22} />
             <div>
-              <h2 className="h6 mb-1">Home delivery beyond Solapur</h2>
+              <h2 className="h6 mb-1">Coordinate a safe handoff</h2>
               <p className="mb-0">
-                Delivery requests from anywhere in India are considered case by case.
-                The shelter must approve availability and confirm any delivery cost.
+                The shelter will contact you to arrange pickup or discuss delivery.
+                Any delivery availability and cost are agreed directly with the shelter.
               </p>
             </div>
           </section>
@@ -252,8 +237,8 @@ export default function PetDetails() {
           <section className="adoption-tip-panel mb-4">
             <ShieldCheck size={22} />
             <div>
-              <h2 className="h6 mb-1">Adoption starts with a conversation</h2>
-              <p className="mb-0">Tell the shelter about your home, experience, and the kind of care you can provide.</p>
+              <h2 className="h6 mb-1">A direct adoption</h2>
+              <p className="mb-0">Confirm now, then coordinate a responsible handoff with the shelter.</p>
             </div>
           </section>
 
@@ -304,9 +289,13 @@ export default function PetDetails() {
 
           {message && <div className="alert alert-info">{message}</div>}
 
-          {isAvailable && user?.role === "adopter" && !submitted && (
-            <form onSubmit={apply} className="feature-card mt-4">
-              <h2 className="h5"><Heart size={19} /> Apply to adopt {pet.name}</h2>
+          {isAvailable && user?.role === "adopter" && !purchased && (
+            <form onSubmit={buy} className="feature-card mt-4">
+              <h2 className="h5"><ShoppingCart size={19} /> Adopt {pet.name} now</h2>
+              <p className="paw-muted">
+                This confirms the adoption immediately. The shelter will coordinate handoff.
+                {Number(pet.adoptionFee || 0) > 0 && " Pay the fee in cash at handoff."}
+              </p>
               <label className="form-label mt-3" htmlFor="applicant-phone">Contact phone *</label>
               <input
                 id="applicant-phone"
@@ -320,93 +309,16 @@ export default function PetDetails() {
                 onChange={(e) => setApplicantPhone(e.target.value)}
                 placeholder="Phone number the shelter can reach you at"
               />
-              <label className="form-label" htmlFor="adoption-reason">Why would you like to adopt?</label>
-              <textarea id="adoption-reason" className="form-control mb-3" required minLength={10} maxLength={2000} rows={4} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Tell us why you would like to give this pet a home..." />
-              <label className="form-label" htmlFor="pet-experience">Previous pet experience</label>
-              <textarea id="pet-experience" className="form-control mb-3" rows={3} value={experience} onChange={(e) => setExperience(e.target.value)} placeholder="Have you cared for pets before?" />
-              <label className="form-label" htmlFor="living-situation">Living situation</label>
-              <textarea id="living-situation" className="form-control mb-3" rows={3} value={livingSituation} onChange={(e) => setLivingSituation(e.target.value)} placeholder="Describe your home and living arrangements..." />
-              <label className="form-label" htmlFor="adoption-care-plan">
-                How will you care for this pet? *
-              </label>
-              <textarea
-                id="adoption-care-plan"
-                className="form-control mb-3"
-                required
-                minLength={20}
-                maxLength={2000}
-                rows={4}
-                value={carePlan}
-                onChange={(e) => setCarePlan(e.target.value)}
-                placeholder="Describe daily care, exercise, veterinary visits, and how you will handle ongoing costs..."
-              />
-              <label className="form-label" htmlFor="vet-reference">
-                Veterinarian reference (optional)
-              </label>
-              <input
-                id="vet-reference"
-                className="form-control mb-3"
-                maxLength={200}
-                value={vetReference}
-                onChange={(e) => setVetReference(e.target.value)}
-                placeholder="Clinic or veterinarian name and contact"
-              />
-              <div className="form-check mb-3">
-                <input
-                  id="household-consent"
-                  className="form-check-input"
-                  type="checkbox"
-                  required
-                  checked={householdConsent}
-                  onChange={(e) => setHouseholdConsent(e.target.checked)}
-                />
-                <label className="form-check-label" htmlFor="household-consent">
-                  Everyone in my household agrees to adopt and help care for this pet. *
-                </label>
-              </div>
-              <div className="form-check mb-3">
-                <input
-                  id="home-delivery"
-                  className="form-check-input"
-                  type="checkbox"
-                  checked={homeDeliveryRequested}
-                  onChange={(e) => setHomeDeliveryRequested(e.target.checked)}
-                />
-                <label className="form-check-label" htmlFor="home-delivery">
-                  Request home delivery (including outside Solapur)
-                </label>
-              </div>
-              {homeDeliveryRequested && (
-                <div className="mb-3">
-                  <label className="form-label" htmlFor="delivery-address">
-                    Delivery address *
-                  </label>
-                  <textarea
-                    id="delivery-address"
-                    className="form-control"
-                    required
-                    minLength={10}
-                    maxLength={500}
-                    rows={3}
-                    value={deliveryAddress}
-                    onChange={(e) => setDeliveryAddress(e.target.value)}
-                    placeholder="Full address, city, state, and postal code"
-                  />
-                  <small className="paw-muted">
-                    This is a request only; the shelter will confirm whether delivery is possible.
-                  </small>
-                </div>
-              )}
-              <button type="submit" className="btn paw-primary w-100" disabled={submitting}>
-                {submitting ? "Submitting..." : "Submit adoption application"}
+              <button type="submit" className="btn paw-primary w-100" disabled={submitting || applicantPhone.trim().length < 7}>
+                {submitting ? "Confirming..." : Number(pet.adoptionFee || 0) > 0 ? "Buy / Adopt Now · Cash on delivery" : "Adopt Now"}
               </button>
             </form>
           )}
 
-          {submitted && <Link to="/my-applications" className="btn paw-primary mt-3">View my applications</Link>}
-          {!user && <Link className="btn paw-primary mt-3" to="/login">Login to apply</Link>}
-          {user && user.role !== "adopter" && <div className="alert alert-secondary mt-3">Only adopter accounts can submit adoption applications.</div>}
-          {!isAvailable && <div className="alert alert-warning mt-3">This pet is not currently available for adoption.</div>}
+          {purchased && <Link to="/my-adoptions" className="btn paw-primary mt-3">View my adoptions</Link>}
+          {!user && <Link className="btn paw-primary mt-3" to="/login">Log in to adopt</Link>}
+          {user && user.role !== "adopter" && <div className="alert alert-secondary mt-3">Only adopter accounts can adopt a pet.</div>}
+          {!isAvailable && !purchased && <div className="alert alert-warning mt-3">This pet is not currently available for adoption.</div>}
         </div>
       </div>
 

@@ -90,7 +90,7 @@ The script creates these role accounts if they do not already exist. Existing ad
 
 These are demo login identifiers only; the seed does not create or verify Gmail inboxes. Set `EMAIL_NOTIFICATIONS_ENABLED=false` in local `.env` during demonstrations unless you own the recipient addresses. Do not publish the password value in a public repository or production frontend.
 
-## 5. Sample pets and applications
+## 5. Sample pets, adoption records, and rescue reports
 
 The seed script creates sixteen fictional sample pet profiles for local development: fourteen marked Available, one Pending, and one Adopted.
 
@@ -115,7 +115,7 @@ The seed script creates sixteen fictional sample pet profiles for local developm
 
 The browse page supports puppy, adult dog, kitten, adult cat, senior, bird, and special-care categories. Shelters can assign or edit these categories from the add-pet and edit-pet forms.
 
-The homepage and Browse Pets page keep API-backed adoption listings separate from clearly labeled showcase profiles. Showcase cards cannot receive applications. Seeded profiles are fictional local-development data, not verified or live adoption offers. The seed command is blocked in production mode and should only be used with a development database.
+The homepage and Browse Pets page keep API-backed adoption listings separate from clearly labeled showcase profiles. Showcase cards cannot be adopted. Seeded profiles and rescue reports are fictional local-development data, not verified listings or active emergencies. The seed command is blocked in production mode and should only be used with a development database.
 
 It also creates three application records:
 
@@ -124,6 +124,17 @@ It also creates three application records:
 - Luna: Rejected
 
 Existing records are preserved. Demo pets use internal demo keys so repeated seed runs do not duplicate them.
+
+The seed also creates four rescue reports for a teacher/demo walkthrough:
+
+| Sample case | Status | Demo purpose |
+|---|---|---|
+| Injured dog near the market | Submitted | New case awaiting rescue action |
+| Kitten found in rain | Assigned | Assignment and pickup notes |
+| Bird with a possible wing injury | In Progress | Active work and cash pledge |
+| Reunited puppy | Resolved | Completed case and rescue notes |
+
+These reports are visible to admins and to the demo rescuer where the case is assigned or still submitted. They use fictional contact numbers and demo locations.
 
 ## 6. Suggested presentation flow
 
@@ -136,9 +147,9 @@ Existing records are preserved. Demo pets use internal demo keys so repeated see
 5. Open a pet details page.
 6. Review age, gender, location, health, and vaccination information.
 7. Send a question to the shelter.
-8. Complete the adoption application form.
-9. Optionally request home delivery and provide the destination address.
-10. Open **My Applications** and show the status, fee, and delivery decision.
+8. Enter a contact phone number and confirm **Adopt Now**.
+9. Show the instant adoption confirmation and the COD payment status, if a fee applies.
+10. Open **My adoptions** to review the adoption and handoff details.
 
 ### Shelter flow
 
@@ -148,9 +159,9 @@ Existing records are preserved. Demo pets use internal demo keys so repeated see
 4. Open adoption applications.
 5. Review applicant details.
 6. Set an adoption fee on a pet listing; use ₹0 for a no-fee adoption.
-7. Move an application under review, approve it, or reject it. For a delivery request, choose whether delivery is possible.
-8. At handoff, record COD collection for an approved application with a fee.
-9. Confirm that an approved pet becomes adopted and competing applications are rejected.
+7. Review older adoption requests and their statuses.
+8. At handoff, record COD collection for a confirmed adoption with a fee.
+9. Confirm that adopting a pet changes it to Adopted and closes any older pending requests.
 
 Any signed-in user can submit a pet listing with a JPEG, PNG, or WebP photo (up to 5 MB) and a contact phone number. Submissions and subsequent edits stay hidden until an admin approves them from **Pet listing requests**. Rejected listings include admin feedback and can be edited and resubmitted. Photos are stored with pet records in MongoDB.
 
@@ -174,17 +185,18 @@ Any signed-in user can submit a pet listing with a JPEG, PNG, or WebP photo (up 
 
 ## 7. Adoption workflow rules
 
-- Only authenticated adopter accounts can submit applications.
-- A user cannot submit duplicate applications for the same pet.
-- Unavailable or adopted pets cannot receive new applications.
+- Only authenticated adopter accounts can confirm an adoption.
+- A user cannot create duplicate adoption records for the same pet.
+- Unavailable or adopted pets cannot be adopted.
 - Only the pet’s shelter or an administrator can review its applications.
 - Approving an application changes the pet to `Adopted`.
 - Other pending applications for an adopted pet are rejected automatically.
 - Applicants can view only their own application history.
 - Pet listings from any signed-in user are private until an admin approves them; edits to a listing return it to pending review.
-- Adoption applications include a reachable phone number, household consent, and pet-care plan; a veterinarian reference is optional.
-- Adoption fees are set per pet, snapshotted when an application is submitted, and recorded as COD only after shelter/admin confirmation at handoff. This records a cash collection; no online payment processor is integrated.
-- Home delivery requests are considered case by case. A shelter must approve availability and confirm any delivery charges; no carrier or delivery charge is automatically arranged.
+- Direct adoption is confirmed immediately; the pet is marked Adopted and competing pending requests are closed.
+- Adoption fees are snapshotted at confirmation and are payable as COD at handoff. The shelter/admin records collection; no online payment processor is integrated.
+- The shelter coordinates pickup or any delivery directly with the adopter; delivery availability and charges are not automatically arranged.
+- Older application records remain visible to the shelter for history and management.
 - Rescue donations are optional cash pledges, not online payments. An admin or the assigned rescuer records collection after receiving the cash.
 
 ## 8. Messaging workflow

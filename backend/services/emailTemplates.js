@@ -95,6 +95,24 @@ export const buildAdoptionStatusEmail = ({ name, petName, status }) =>
     details: [{ label: "Pet", value: petName }, { label: "Status", value: status }],
   });
 
+export const buildDirectAdoptionConfirmationEmail = ({ name, petName, adoptionFee }) =>
+  buildBrandedEmail({
+    title: "Adoption confirmed",
+    preheader: `Your adoption of ${petName} is confirmed.`,
+    paragraphs: [
+      `Hello ${name},`,
+      `Your adoption of ${petName} is confirmed. The shelter will coordinate the handoff with you.`,
+      adoptionFee > 0
+        ? "The adoption fee is payable in cash to the shelter when the pet is handed over."
+        : "There is no adoption fee due for this adoption.",
+    ],
+    details: [
+      { label: "Pet", value: petName },
+      { label: "Adoption fee", value: `₹${Number(adoptionFee || 0).toLocaleString("en-IN")}` },
+      { label: "Payment", value: adoptionFee > 0 ? "Cash on delivery" : "Not required" },
+    ],
+  });
+
 export const buildRescueAssignmentEmail = ({ rescuerName, animalType, location, reportId }) =>
   buildBrandedEmail({
     title: "A rescue case was assigned to you",

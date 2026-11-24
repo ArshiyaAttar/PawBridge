@@ -59,7 +59,9 @@ function App() {
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                 <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
+                <Route path="/my-adoptions" element={<ProtectedRoute roles={["adopter"]}><MyApplications /></ProtectedRoute>} />
                 <Route path="/my-applications" element={<ProtectedRoute roles={["adopter"]}><MyApplications /></ProtectedRoute>} />
+                <Route path="/adoptions/:id" element={<ProtectedRoute><ApplicationDetails /></ProtectedRoute>} />
                 <Route path="/applications/:id" element={<ProtectedRoute><ApplicationDetails /></ProtectedRoute>} />
                 <Route path="/my-rescues" element={<ProtectedRoute><MyRescues /></ProtectedRoute>} />
 

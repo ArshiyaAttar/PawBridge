@@ -358,7 +358,7 @@ export default function Home() {
             From first hello to <span>forever home.</span>
           </h2>
           <p className="paw-muted mx-auto section-description">
-            Find a companion, follow your application, or help an animal in
+            Find a companion, manage your adoptions, or help an animal in
             need. PawBridge keeps each step connected.
           </p>
         </div>
@@ -373,10 +373,10 @@ export default function Home() {
             },
             {
               icon: <ClipboardList />,
-              title: "Follow your application",
-              text: "Check application status, shelter feedback, and full details.",
-              action: "View applications",
-              link: "/my-applications",
+              title: "Track your adoption",
+              text: "Review confirmed adoptions and any older requests.",
+              action: "View adoptions",
+              link: "/my-adoptions",
             },
             {
               icon: <ShieldCheck />,

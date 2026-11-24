@@ -74,9 +74,9 @@ export default function ApplicationDetails() {
         <div className="alert alert-danger">
           {error || "Application not found."}
         </div>
-        <Link to="/my-applications" className="btn btn-outline-success">
+        <Link to="/my-adoptions" className="btn btn-outline-success">
           <ArrowLeft size={16} className="me-2" />
-          Back to applications
+          Back to my adoptions
         </Link>
       </main>
     );
@@ -84,25 +84,26 @@ export default function ApplicationDetails() {
 
   const pet = application.pet;
   const applicant = application.applicant;
+  const isDirectPurchase = application.requestType === "Direct Purchase";
 
   return (
     <main className="container paw-section">
       <Link
-        to="/my-applications"
+        to="/my-adoptions"
         className="btn btn-outline-secondary btn-sm mb-4"
       >
         <ArrowLeft size={16} className="me-2" />
-        Back to applications
+        Back to my adoptions
       </Link>
 
       <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
-          <span className="eyebrow">APPLICATION INFORMATION</span>
+          <span className="eyebrow">{isDirectPurchase ? "ADOPTION INFORMATION" : "APPLICATION INFORMATION"}</span>
           <h1 className="section-title mt-2">
-            Application <span>details.</span>
+            Adoption <span>details.</span>
           </h1>
           <p className="paw-muted mb-0">
-            Review the application information and its current progress.
+            Review the adoption status, payment, and handoff details.
           </p>
         </div>
 
@@ -111,7 +112,7 @@ export default function ApplicationDetails() {
             statusStyles[application.status] || "text-bg-secondary"
           }`}
         >
-          {application.status}
+          {isDirectPurchase ? "Confirmed" : application.status}
         </span>
       </div>
 
@@ -120,17 +121,17 @@ export default function ApplicationDetails() {
           <div className="feature-card mb-4">
             <div className="d-flex align-items-center gap-2 mb-3">
               <ClipboardList size={22} className="text-success" />
-              <h5 className="mb-0">Application information</h5>
+              <h5 className="mb-0">{isDirectPurchase ? "Adoption confirmation" : "Application information"}</h5>
             </div>
 
             <div className="row g-3">
               <div className="col-sm-6">
-                <small className="paw-muted">Application ID</small>
+                <small className="paw-muted">Record ID</small>
                 <p className="fw-semibold text-break">{application._id}</p>
               </div>
 
               <div className="col-sm-6">
-                <small className="paw-muted">Submitted on</small>
+                <small className="paw-muted">{isDirectPurchase ? "Confirmed on" : "Submitted on"}</small>
                 <p className="fw-semibold">
                   {application.createdAt
                     ? new Date(application.createdAt).toLocaleString()
@@ -139,9 +140,11 @@ export default function ApplicationDetails() {
               </div>
 
               <div className="col-sm-6">
-                <small className="paw-muted">Last reviewed</small>
+                <small className="paw-muted">{isDirectPurchase ? "Handoff" : "Last reviewed"}</small>
                 <p className="fw-semibold">
-                  {application.reviewedAt
+                  {isDirectPurchase
+                    ? "Coordinate with the shelter"
+                    : application.reviewedAt
                     ? new Date(application.reviewedAt).toLocaleString()
                     : "Not reviewed yet"}
                 </p>
@@ -184,48 +187,40 @@ export default function ApplicationDetails() {
               </p>
             )}
 
-            <h6>Reason for adoption</h6>
-            <p className="paw-muted">
-              {application.reason || "Not provided"}
-            </p>
-
-            <h6>Previous pet experience</h6>
-            <p className="paw-muted">
-              {application.experience || "Not provided"}
-            </p>
-
-            <h6>Living situation</h6>
-            <p className="paw-muted mb-0">
-              {application.livingSituation || "Not provided"}
-            </p>
-            <h6>Pet-care plan</h6>
-            <p className="paw-muted">
-              {application.carePlan || "Not provided"}
-            </p>
-            <h6>Household consent</h6>
-            <p className="paw-muted">
-              {application.householdConsent ? "Confirmed" : "Not recorded"}
-            </p>
-            <h6>Veterinarian reference</h6>
-            <p className="paw-muted mb-0">
-              {application.vetReference || "Not provided"}
-            </p>
-          </div>
-
-          <div className="feature-card">
-            <div className="d-flex align-items-center gap-2 mb-3">
-              <CheckCircle size={22} className="text-success" />
-              <h5 className="mb-0">Shelter review and feedback</h5>
-            </div>
-
-            {application.shelterNotes ? (
-              <p className="paw-muted mb-0">{application.shelterNotes}</p>
-            ) : (
-              <p className="paw-muted mb-0">
-                The shelter has not added any feedback yet.
-              </p>
+            {!isDirectPurchase && (
+              <>
+                <h6>Reason for adoption</h6>
+                <p className="paw-muted">{application.reason || "Not provided"}</p>
+                <h6>Previous pet experience</h6>
+                <p className="paw-muted">{application.experience || "Not provided"}</p>
+                <h6>Living situation</h6>
+                <p className="paw-muted mb-0">{application.livingSituation || "Not provided"}</p>
+                <h6>Pet-care plan</h6>
+                <p className="paw-muted">{application.carePlan || "Not provided"}</p>
+                <h6>Household consent</h6>
+                <p className="paw-muted">{application.householdConsent ? "Confirmed" : "Not recorded"}</p>
+                <h6>Veterinarian reference</h6>
+                <p className="paw-muted mb-0">{application.vetReference || "Not provided"}</p>
+              </>
             )}
           </div>
+
+          {!isDirectPurchase && (
+            <div className="feature-card">
+              <div className="d-flex align-items-center gap-2 mb-3">
+                <CheckCircle size={22} className="text-success" />
+                <h5 className="mb-0">Shelter review and feedback</h5>
+              </div>
+
+              {application.shelterNotes ? (
+                <p className="paw-muted mb-0">{application.shelterNotes}</p>
+              ) : (
+                <p className="paw-muted mb-0">
+                  The shelter has not added any feedback yet.
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="col-lg-5">
@@ -280,7 +275,7 @@ export default function ApplicationDetails() {
             <div className="feature-card">
               <div className="d-flex align-items-center gap-2 mb-3">
                 <UserRound size={22} className="text-success" />
-                <h5 className="mb-0">Applicant</h5>
+                <h5 className="mb-0">Adopter</h5>
               </div>
 
               <p>
@@ -298,9 +293,9 @@ export default function ApplicationDetails() {
       </div>
 
       <div className="mt-4">
-        <Link to="/my-applications" className="btn btn-outline-secondary">
+        <Link to="/my-adoptions" className="btn btn-outline-secondary">
           <CalendarDays size={16} className="me-2" />
-          All my applications
+          All my adoptions
         </Link>
       </div>
     </main>
