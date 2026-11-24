@@ -117,6 +117,8 @@ The browse page supports puppy, adult dog, kitten, adult cat, senior, bird, and 
 
 The homepage and Browse Pets page keep API-backed adoption listings separate from clearly labeled showcase profiles. Showcase cards cannot be adopted. Seeded profiles and rescue reports are fictional local-development data, not verified listings or active emergencies. The seed command is blocked in production mode and should only be used with a development database.
 
+The homepage also includes four clearly labeled rescue-report examples so presentations can demonstrate Submitted, Assigned, In Progress, and Resolved statuses without requiring seeded database records. They are fictional and do not represent active emergencies.
+
 It also creates three application records:
 
 - Bruno: Pending

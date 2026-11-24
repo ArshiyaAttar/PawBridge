@@ -111,6 +111,51 @@ const samplePets = [
   },
 ];
 
+const sampleRescueReports = [
+  {
+    id: "PB-DEMO-01",
+    animalType: "Dog",
+    status: "Submitted",
+    location: "Solapur market area",
+    description:
+      "A limping dog was spotted near the market. The report asks the rescue team to assess its paw and arrange safe assistance.",
+  },
+  {
+    id: "PB-DEMO-02",
+    animalType: "Cat",
+    status: "Assigned",
+    location: "Akkalkot bus stand",
+    description:
+      "A kitten was found under a shop awning during heavy rain and moved to a dry, quiet spot.",
+    update: "A rescuer has been assigned and is arranging a safe pickup.",
+  },
+  {
+    id: "PB-DEMO-03",
+    animalType: "Bird",
+    status: "In Progress",
+    location: "Solapur public garden",
+    description:
+      "A small bird with a possible wing injury was found in a garden and placed in a ventilated box.",
+    update: "The rescuer is coordinating an assessment with a local wildlife-care contact.",
+  },
+  {
+    id: "PB-DEMO-04",
+    animalType: "Dog",
+    status: "Resolved",
+    location: "Barshi community hall",
+    description:
+      "A lost puppy was reported near the community hall and safely reunited with its family.",
+    update: "The family confirmed the puppy is home and safe.",
+  },
+];
+
+const rescueStatusClasses = {
+  Submitted: "text-bg-info",
+  Assigned: "text-bg-primary",
+  "In Progress": "text-bg-warning",
+  Resolved: "text-bg-success",
+};
+
 const getAgeLabel = (age) => {
   if (age === 0) return "Under 1 year";
   return `${age} ${age === 1 ? "year" : "years"} old`;
@@ -348,6 +393,57 @@ export default function Home() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className="container paw-section" aria-labelledby="sample-rescue-title">
+        <div className="text-center mb-4">
+          <span className="eyebrow">RESCUE RESPONSE SHOWCASE</span>
+          <h2 id="sample-rescue-title" className="section-title">
+            See how rescue <span>reports progress.</span>
+          </h2>
+          <p className="paw-muted mx-auto section-description">
+            Sample cases show how a report can move from submission through
+            rescue-team follow-up to resolution.
+          </p>
+        </div>
+
+        <div className="alert alert-warning sample-pets-notice" role="note">
+          These are fictional examples for demonstration only. They are not
+          active emergencies or real rescue requests.
+        </div>
+
+        <div className="row g-4">
+          {sampleRescueReports.map((report) => (
+            <div className="col-md-6 col-xl-3" key={report.id}>
+              <article className="feature-card h-100">
+                <div className="d-flex justify-content-between align-items-start gap-2 mb-3">
+                  <div>
+                    <span className="eyebrow mb-2">{report.id}</span>
+                    <h3 className="h5 mb-0">{report.animalType} rescue</h3>
+                  </div>
+                  <span className={`badge ${rescueStatusClasses[report.status]}`}>
+                    {report.status}
+                  </span>
+                </div>
+                <p className="small mb-2">
+                  <MapPin size={15} className="text-success me-1" />
+                  {report.location}
+                </p>
+                <p className="paw-muted">{report.description}</p>
+                {report.update && (
+                  <div className="alert alert-light border mb-0">
+                    <strong>Rescue update:</strong> {report.update}
+                  </div>
+                )}
+              </article>
+            </div>
+          ))}
+        </div>
+        <div className="text-center mt-4">
+          <Link to="/rescue" className="btn btn-outline-success">
+            Submit a rescue report <ArrowRight size={16} className="ms-1" />
+          </Link>
         </div>
       </section>
 
