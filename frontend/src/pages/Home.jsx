@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   ClipboardList,
   FileText,
+  Quote,
 } from "lucide-react";
 import API from "../services/api";
 import { getPetImageSrc } from "../services/petImages";
@@ -146,6 +147,24 @@ const sampleRescueReports = [
     description:
       "A lost puppy was reported near the community hall and safely reunited with its family.",
     update: "The family confirmed the puppy is home and safe.",
+  },
+];
+
+const sampleFeedback = [
+  {
+    quote:
+      "The pet profile helped me understand her personality before we met. The shelter made the next steps feel clear and comfortable.",
+    label: "Sample adopter · Cat adoption",
+  },
+  {
+    quote:
+      "I found a companion who fits our family, and being able to ask the shelter questions made a big difference.",
+    label: "Sample adopter · Dog adoption",
+  },
+  {
+    quote:
+      "PawBridge made it easy to learn about adoption and prepare a safe, welcoming space for a new pet.",
+    label: "Sample adopter · First-time adoption",
   },
 ];
 
@@ -500,6 +519,37 @@ export default function Home() {
               </Link>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className="feedback-section" aria-labelledby="sample-feedback-title">
+        <div className="container paw-section">
+          <div className="text-center mb-4">
+            <span className="eyebrow">COMMUNITY FEEDBACK</span>
+            <h2 id="sample-feedback-title" className="section-title">
+              Stories that make us <span>smile.</span>
+            </h2>
+            <p className="paw-muted mx-auto section-description">
+              A glimpse of the thoughtful adoption experience we hope to support.
+            </p>
+          </div>
+
+          <div className="alert alert-warning sample-pets-notice" role="note">
+            These are fictional sample comments for demonstration only, not reviews
+            submitted by real users.
+          </div>
+
+          <div className="row g-4">
+            {sampleFeedback.map((item) => (
+              <div className="col-md-4" key={item.label}>
+                <article className="feedback-card h-100">
+                  <Quote className="feedback-quote-icon" size={25} aria-hidden="true" />
+                  <p className="feedback-quote">{item.quote}</p>
+                  <p className="feedback-attribution mb-0">{item.label}</p>
+                </article>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 

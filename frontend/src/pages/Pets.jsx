@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Activity,
+  ArrowRight,
   CheckCircle2,
   MapPin,
   PawPrint,
@@ -202,60 +203,66 @@ export default function Pets() {
           !error &&
           pets.map((pet) => (
             <div className="col-sm-6 col-lg-4" key={pet._id}>
-              <article className="pet-card h-100">
-                <div className="pet-card-image-wrap">
-                  <img
-                    src={getPetImageSrc(pet) || fallbackImages[pet.species] || fallbackImage}
-                    alt={`${pet.name}, ${pet.species}`}
-                    onError={(e) => {
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.src =
-                        fallbackImages[pet.species] || fallbackImage;
-                    }}
-                    className="pet-card-image"
-                  />
-                  <span className="pet-status-badge">{pet.status}</span>
-                </div>
+              <Link
+                to={`/pets/${pet._id}`}
+                className="pet-listing-link"
+                aria-label={`View ${pet.name}'s pet details`}
+              >
+                <article className="pet-card h-100">
+                  <div className="pet-card-image-wrap">
+                    <img
+                      src={getPetImageSrc(pet) || fallbackImages[pet.species] || fallbackImage}
+                      alt={`${pet.name}, ${pet.species}`}
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src =
+                          fallbackImages[pet.species] || fallbackImage;
+                      }}
+                      className="pet-card-image"
+                    />
+                    <span className="pet-status-badge">{pet.status}</span>
+                  </div>
 
-                <div className="p-4 d-flex flex-column h-100">
-                  <div className="d-flex justify-content-between align-items-start gap-2">
-                    <div>
-                      <h2 className="h4 fw-bold mb-1">{pet.name}</h2>
-                      <p className="paw-muted mb-3">
-                        {pet.breed || "Mixed breed"} · {getAgeLabel(pet.age)}
-                      </p>
+                  <div className="p-4 d-flex flex-column h-100">
+                    <div className="d-flex justify-content-between align-items-start gap-2">
+                      <div>
+                        <h2 className="h4 fw-bold mb-1">{pet.name}</h2>
+                        <p className="paw-muted mb-3">
+                          {pet.breed || "Mixed breed"} · {getAgeLabel(pet.age)}
+                        </p>
+                      </div>
+                      <span className="species-tag">{pet.species}</span>
                     </div>
-                    <span className="species-tag">{pet.species}</span>
-                  </div>
 
-                  <div className="pet-fact-list mb-3">
-                    <span><VenusAndMars size={15} /> {pet.gender || "Unknown"}</span>
-                    <span><MapPin size={15} /> {pet.location}</span>
-                    <span>
-                      {Number(pet.adoptionFee || 0) > 0
-                        ? `Adoption fee: ₹${Number(pet.adoptionFee).toLocaleString("en-IN")} · COD`
-                        : "No adoption fee"}
-                    </span>
-                    <span>
-                      <CheckCircle2 size={15} />
-                      {pet.vaccinated ? "Vaccinated" : "Vaccination unconfirmed"}
-                    </span>
-                  </div>
+                    <div className="pet-fact-list mb-3">
+                      <span><VenusAndMars size={15} /> {pet.gender || "Unknown"}</span>
+                      <span><MapPin size={15} /> {pet.location}</span>
+                      <span>
+                        {Number(pet.adoptionFee || 0) > 0
+                          ? `Adoption fee: ₹${Number(pet.adoptionFee).toLocaleString("en-IN")} · COD`
+                          : "No adoption fee"}
+                      </span>
+                      <span>
+                        <CheckCircle2 size={15} />
+                        {pet.vaccinated ? "Vaccinated" : "Vaccination unconfirmed"}
+                      </span>
+                    </div>
 
-                  <p className="pet-description mb-4">
-                    {pet.description || "This pet is waiting to meet a caring family."}
-                  </p>
-
-                  <div className="mt-auto">
-                    <p className="pet-health-note mb-3">
-                      <Activity size={15} /> {pet.healthStatus || "Health details available on profile"}
+                    <p className="pet-description mb-4">
+                      {pet.description || "This pet is waiting to meet a caring family."}
                     </p>
-                    <Link to={`/pets/${pet._id}`} className="btn paw-primary w-100">
-                      View &amp; Adopt {pet.name}
-                    </Link>
+
+                    <div className="mt-auto">
+                      <p className="pet-health-note mb-3">
+                        <Activity size={15} /> {pet.healthStatus || "Health details available on profile"}
+                      </p>
+                      <span className="pet-listing-cta">
+                        View &amp; Adopt {pet.name} <ArrowRight size={16} />
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </article>
+                </article>
+              </Link>
             </div>
           ))}
       </div>
