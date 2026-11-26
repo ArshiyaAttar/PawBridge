@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   PawPrint,
   Heart,
@@ -181,6 +181,7 @@ const getAgeLabel = (age) => {
 };
 
 export default function Home() {
+  const location = useLocation();
   const [pets, setPets] = useState([]);
   const [loadingPets, setLoadingPets] = useState(true);
   const [petsError, setPetsError] = useState("");
@@ -215,6 +216,14 @@ export default function Home() {
       active = false;
     };
   }, [retryKey]);
+
+  useEffect(() => {
+    if (location.hash !== "#feedback-section") return undefined;
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById("feedback-section")?.scrollIntoView();
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [location.hash]);
 
   return (
     <>
@@ -522,7 +531,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="feedback-section" aria-labelledby="sample-feedback-title">
+      <section id="feedback-section" className="feedback-section" aria-labelledby="sample-feedback-title">
         <div className="container paw-section">
           <div className="text-center mb-4">
             <span className="eyebrow">COMMUNITY FEEDBACK</span>

@@ -5,11 +5,15 @@ import {
   MapPin,
   Phone,
   CheckCircle,
-  Clock,
   HeartHandshake,
   Play,
+  Activity,
+  CheckCircle2,
+  Clock3,
+  PawPrint,
 } from "lucide-react";
 import API from "../services/api";
+import DashboardLayout from "../components/DashboardLayout";
 
 export default function RescuerDashboard() {
   const [reports, setReports] = useState([]);
@@ -104,19 +108,43 @@ export default function RescuerDashboard() {
       ? assigned
       : assigned.filter((r) => r.status === filter);
 
-  return (
-    <main className="container paw-section">
-      <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-        <div>
-          <span className="eyebrow">RESCUE OPERATIONS</span>
-          <h1 className="section-title mt-2">
-            Rescuer <span>Dashboard</span>
-          </h1>
-          <p className="paw-muted mb-0">
-            Manage your assigned rescue operations and update their progress.
-          </p>
-        </div>
+  const reportStatusCounts = ["Assigned", "In Progress", "Resolved"].map(
+    (status) => ({
+      label: status,
+      value: assigned.filter((report) => report.status === status).length,
+      color: status === "Resolved" ? "green" : status === "In Progress" ? "blue" : "amber",
+    })
+  );
+  const allStatusCounts = ["Submitted", "Assigned", "In Progress", "Resolved"].map(
+    (status) => ({
+      label: status,
+      value: reports.filter((report) => report.status === status).length,
+      color: status === "Resolved" ? "green" : status === "In Progress" ? "blue" : "amber",
+    })
+  );
 
+  return (
+    <DashboardLayout
+      roleLabel="Rescuer"
+      title="Rescue operations"
+      description="Manage assigned rescue cases and keep their progress up to date."
+      navItems={[
+        { title: "Dashboard", url: "/rescuer", icon: Activity },
+        { title: "Rescue cases", url: "/rescuer#rescue-cases", icon: HeartHandshake },
+        { title: "Report an animal", url: "/rescue", icon: PawPrint },
+        { title: "My profile", url: "/profile", icon: CheckCircle2 },
+      ]}
+      stats={[
+        { label: "Assigned cases", value: loading ? "…" : assigned.length, icon: HeartHandshake, detail: "Cases assigned to you" },
+        { label: "In progress", value: loading ? "…" : inProgress.length, icon: Clock3, detail: "Currently being handled" },
+        { label: "Resolved", value: loading ? "…" : resolved.length, icon: CheckCircle2, detail: "Successfully completed" },
+        { label: "Visible reports", value: loading ? "…" : reports.length, icon: PawPrint, detail: "Assigned or awaiting assignment" },
+      ]}
+      charts={loading ? [] : [
+        { title: "Your assigned cases", items: reportStatusCounts },
+        { title: "Rescue report progress", items: allStatusCounts },
+      ]}
+      actions={
         <button
           className="btn btn-outline-success"
           onClick={loadReports}
@@ -125,35 +153,12 @@ export default function RescuerDashboard() {
           <RefreshCw size={16} className="me-2" />
           Refresh
         </button>
-      </div>
+      }
+    >
 
       {message && <div className="alert alert-success">{message}</div>}
       {error && <div className="alert alert-danger">{error}</div>}
       {emailWarning && <div className="alert alert-warning">{emailWarning}</div>}
-
-      <div className="row g-3 mb-4">
-        <div className="col-6 col-lg-4">
-          <div className="feature-card h-100">
-            <HeartHandshake size={26} className="text-success mb-2" />
-            <h3>{assigned.length}</h3>
-            <p className="paw-muted mb-0">Assigned cases</p>
-          </div>
-        </div>
-        <div className="col-6 col-lg-4">
-          <div className="feature-card h-100">
-            <Clock size={26} className="text-warning mb-2" />
-            <h3>{inProgress.length}</h3>
-            <p className="paw-muted mb-0">In progress</p>
-          </div>
-        </div>
-        <div className="col-6 col-lg-4">
-          <div className="feature-card h-100">
-            <CheckCircle size={26} className="text-success mb-2" />
-            <h3>{resolved.length}</h3>
-            <p className="paw-muted mb-0">Resolved</p>
-          </div>
-        </div>
-      </div>
 
       <div className="d-flex flex-wrap gap-2 mb-4">
         {["All", "Assigned", "In Progress", "Resolved"].map((status) => (
@@ -169,6 +174,8 @@ export default function RescuerDashboard() {
         ))}
       </div>
 
+      <section id="rescue-cases" className="dashboard-quick-access">
+        <h2 className="mb-3">Rescue cases</h2>
       {loading ? (
         <div className="text-center py-5">
           <div className="spinner-border text-success" />
@@ -307,6 +314,7 @@ export default function RescuerDashboard() {
           ))}
         </div>
       )}
-    </main>
+      </section>
+    </DashboardLayout>
   );
 }

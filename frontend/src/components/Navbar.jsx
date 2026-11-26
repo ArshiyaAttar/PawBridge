@@ -16,10 +16,16 @@ export default function Navbar() {
   const { user, logout } = useAuth();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const dashboardUrl = {
+    adopter: "/dashboard",
+    shelter: "/shelter",
+    rescuer: "/rescuer",
+    admin: "/admin",
+  }[user?.role] || "/dashboard";
 
   useEffect(() => {
     setMenuOpen(false);
-  }, [location.pathname]);
+  }, [location.pathname, location.hash]);
 
   const handleLogout = () => {
     logout();
@@ -63,10 +69,17 @@ export default function Navbar() {
               <NavLink to="/about" className={linkClass}>
                 About
               </NavLink>
+              <NavLink
+                to="/#feedback-section"
+                className={linkClass}
+                onClick={() => setMenuOpen(false)}
+              >
+                Feedback
+              </NavLink>
 
               {user && (
                 <>
-                  <NavLink to="/dashboard" className={linkClass}>
+                  <NavLink to={dashboardUrl} className={linkClass}>
                     Dashboard
                   </NavLink>
                   <NavLink to="/list-pet" className={linkClass}>

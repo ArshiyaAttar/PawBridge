@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import {
   PawPrint,
   ClipboardList,
@@ -9,17 +9,21 @@ import {
   Settings,
   ShieldCheck,
   Activity,
+  CheckCircle2,
+  Clock3,
 } from "lucide-react";
 import API from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import DashboardLayout from "../components/DashboardLayout";
 
 export default function Dashboard() {
   const { user } = useAuth();
   const [stats, setStats] = useState({
-    adoptions: 0,
-    rescues: 0,
+    applications: [],
+    rescues: [],
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const links = {
     adopter: [
@@ -63,6 +67,7 @@ export default function Dashboard() {
 
     const loadStats = async () => {
       setLoading(true);
+      setError("");
 
       try {
         const [adoptionsResponse, rescuesResponse] =
@@ -72,13 +77,14 @@ export default function Dashboard() {
           ]);
 
         setStats({
-          adoptions: adoptionsResponse.data.count ??
-            adoptionsResponse.data.applications?.length ?? 0,
-          rescues: rescuesResponse.data.count ??
-            rescuesResponse.data.reports?.length ?? 0,
+          applications: adoptionsResponse.data.applications || [],
+          rescues: rescuesResponse.data.reports || [],
         });
       } catch (error) {
-        console.error("Dashboard statistics unavailable:", error);
+        setError(
+          error.response?.data?.message ||
+            "Unable to load your dashboard activity."
+        );
       } finally {
         setLoading(false);
       }
@@ -88,60 +94,87 @@ export default function Dashboard() {
   }, [user?.role]);
 
   const roleLinks = links[user?.role] || links.adopter;
+  const applicationCounts = ["Pending", "Under Review", "Approved", "Rejected"].map(
+    (status) => ({
+      label: status,
+      value: stats.applications.filter((application) => application.status === status).length,
+      color: status === "Approved" ? "green" : status === "Rejected" ? "red" : "blue",
+    })
+  );
+  const rescueCounts = ["Submitted", "Assigned", "In Progress", "Resolved"].map(
+    (status) => ({
+      label: status,
+      value: stats.rescues.filter((report) => report.status === status).length,
+      color: status === "Resolved" ? "green" : status === "In Progress" ? "blue" : "amber",
+    })
+  );
+  const dashboardStats = user?.role === "adopter"
+    ? [
+        {
+          label: "My adoptions",
+          value: loading ? "…" : stats.applications.length,
+          icon: ClipboardList,
+          detail: "Requests and confirmed adoptions",
+        },
+        {
+          label: "Pending decisions",
+          value: loading ? "…" : stats.applications.filter((app) => app.status === "Pending" || app.status === "Under Review").length,
+          icon: Clock3,
+          detail: "Waiting for shelter review",
+        },
+        {
+          label: "Rescue reports",
+          value: loading ? "…" : stats.rescues.length,
+          icon: HeartHandshake,
+          detail: "Reports you submitted",
+        },
+        {
+          label: "Resolved rescues",
+          value: loading ? "…" : stats.rescues.filter((report) => report.status === "Resolved").length,
+          icon: CheckCircle2,
+          detail: "Reports marked resolved",
+        },
+      ]
+    : [];
+
+  const roleDashboard = {
+    shelter: "/shelter",
+    rescuer: "/rescuer",
+    admin: "/admin",
+  }[user?.role];
+
+  if (roleDashboard) return <Navigate to={roleDashboard} replace />;
 
   return (
-    <main className="container paw-section">
-      <span className="eyebrow">YOUR PAWBRIDGE SPACE</span>
-
-      <h1 className="section-title">
-        Welcome, <span>{user?.name}!</span>
-      </h1>
-
-      <p className="paw-muted">
-        Manage your PawBridge activities from one place.
-      </p>
-
-      {user?.role === "adopter" && (
-        <div className="row g-3 mt-3">
-          <div className="col-md-6">
-            <div className="feature-card">
-              <ClipboardList size={28} className="text-success mb-2" />
-              <h3>{loading ? "..." : stats.adoptions}</h3>
-              <p className="paw-muted mb-0">My adoptions and requests</p>
+    <DashboardLayout
+      roleLabel={user?.role || "Member"}
+      title={`Welcome, ${user?.name || "friend"}`}
+      description="Your PawBridge activity and quick links, all in one place."
+      navItems={[
+        { title: "Dashboard", url: "/dashboard", icon: Activity },
+        ...roleLinks,
+      ]}
+      stats={dashboardStats}
+      charts={user?.role === "adopter" ? [
+        { title: "Adoption applications", items: applicationCounts },
+        { title: "Rescue report progress", items: rescueCounts },
+      ] : []}
+    >
+      {error && <div className="alert alert-danger" role="alert">{error}</div>}
+      <section className="dashboard-quick-access">
+        <h2>Quick access</h2>
+        <div className="row g-3">
+          {roleLinks.map(({ title, url, icon: Icon }) => (
+            <div className="col-sm-6 col-xl-4" key={url}>
+              <Link to={url} className="dashboard-quick-link">
+                <Icon size={19} aria-hidden="true" />
+                <span>{title}</span>
+                <span className="ms-auto" aria-hidden="true">→</span>
+              </Link>
             </div>
-          </div>
-
-          <div className="col-md-6">
-            <div className="feature-card">
-              <HeartHandshake size={28} className="text-success mb-2" />
-              <h3>{loading ? "..." : stats.rescues}</h3>
-              <p className="paw-muted mb-0">My rescue reports</p>
-            </div>
-          </div>
+          ))}
         </div>
-      )}
-
-      <h4 className="mt-5 mb-3">Quick access</h4>
-
-      <div className="row g-4">
-        {roleLinks.map(({ title, url, icon: Icon }) => (
-          <div className="col-md-4" key={url}>
-            <Link
-              to={url}
-              className="feature-card h-100 d-block text-decoration-none"
-              style={{ color: "inherit" }}
-            >
-              <Icon size={30} className="text-success mb-3" />
-
-              <h5>{title}</h5>
-
-              <p className="paw-muted mb-0">
-                Open {title.toLowerCase()}.
-              </p>
-            </Link>
-          </div>
-        ))}
-      </div>
-    </main>
+      </section>
+    </DashboardLayout>
   );
 }
