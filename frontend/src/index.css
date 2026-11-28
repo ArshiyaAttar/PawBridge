@@ -61,6 +61,7 @@ img { max-width: 100%; }
   color: #526259;
   font-size: .92rem;
   font-weight: 600;
+  white-space: nowrap;
   text-decoration: none;
   transition: color .18s ease, background-color .18s ease;
 }
@@ -451,7 +452,7 @@ img { max-width: 100%; }
   .paw-footer-main { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem 1rem; }
   .paw-footer-brand { grid-column: 1 / -1; }
 }
-@media(max-width:1199.98px) {
+@media(max-width:1399.98px) {
   .paw-navbar { min-height: 66px; padding: .45rem 0; }
   .paw-navbar .navbar-collapse {
     margin-top: .8rem;

@@ -34,7 +34,7 @@ export default function Navbar() {
 
   return (
     <header className="paw-header">
-      <nav className="navbar navbar-expand-xl paw-navbar">
+      <nav className="navbar navbar-expand-xxl paw-navbar">
         <div className="container">
           <Link className="navbar-brand paw-brand" to="/" aria-label="PawBridge home">
             <span className="brand-icon"><PawPrint size={22} /></span>
